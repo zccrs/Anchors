@@ -8,7 +8,7 @@ class AnchorsBasePrivate;
 class AnchorsBase
 {
 public:
-    AnchorsBase();
+    AnchorsBase(QWidget *w);
     virtual ~AnchorsBase();
 
     struct AnchorsInfo{
@@ -45,32 +45,18 @@ public:
 
     AnchorsBasePrivate *anchors() const;
 private:
+    QWidget *m_widget;
     AnchorsBasePrivate *d_ptr;
     Q_DECLARE_PRIVATE(AnchorsBase)
 
     virtual void _anchorsbase_(){}
 };
 
-template <class T>
-class Anchors: public AnchorsBase, public T
-{
-public:
-    explicit Anchors(QWidget *parent = 0):
-        T(parent)
-    {
-    }
-
-    static Anchors<T> *cast(AnchorsBase* tt)
-    {
-        return reinterpret_cast<Anchors<T>*>(tt);
-    }
-};
-
 class AnchorsBasePrivate: public QObject
 {
     Q_OBJECT
 protected:
-    AnchorsBasePrivate(Anchors<QWidget> *parent);
+    AnchorsBasePrivate(AnchorsBase *parent);
     ~AnchorsBasePrivate();
 public Q_SLOTS:
     void top(const AnchorsBase::AnchorsInfo *info);
@@ -107,8 +93,24 @@ private:
     int m_verticalCenterOffset;
     bool m_alignWhenCentered;
 
-    Anchors<QWidget> *q_ptr;
+    AnchorsBase *q_ptr;
     Q_DECLARE_PUBLIC(AnchorsBase)
+};
+
+template <class T>
+class Anchors: public AnchorsBase, public T
+{
+public:
+    explicit Anchors(QWidget *parent = 0):
+        AnchorsBase(this),
+        T(parent)
+    {
+    }
+
+    static Anchors<T> *cast(AnchorsBase* tt)
+    {
+        return reinterpret_cast<Anchors<T>*>(tt);
+    }
 };
 
 #endif // ANCHORS_H

@@ -1,7 +1,7 @@
 #include "anchors.h"
 #include <QDebug>
 
-AnchorsBasePrivate::AnchorsBasePrivate(Anchors<QWidget> *parent):
+AnchorsBasePrivate::AnchorsBasePrivate(AnchorsBase *parent):
     QObject(),
     m_fill(0),
     m_centerIn(0),
@@ -15,12 +15,14 @@ AnchorsBasePrivate::AnchorsBasePrivate(Anchors<QWidget> *parent):
     m_alignWhenCentered(false),
     q_ptr(parent)
 {
-    m_top = new AnchorsBase::AnchorsInfo(q_ptr, Qt::AnchorTop);
-    m_bottom = new AnchorsBase::AnchorsInfo(q_ptr, Qt::AnchorBottom);
-    m_left = new AnchorsBase::AnchorsInfo(q_ptr, Qt::AnchorLeft);
-    m_right = new AnchorsBase::AnchorsInfo(q_ptr, Qt::AnchorRight);
-    m_horizontalCenter = new AnchorsBase::AnchorsInfo(q_ptr, Qt::AnchorHorizontalCenter);
-    m_verticalCenter = new AnchorsBase::AnchorsInfo(q_ptr, Qt::AnchorVerticalCenter);
+    Q_ASSERT(parent);
+
+    m_top = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorTop);
+    m_bottom = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorBottom);
+    m_left = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorLeft);
+    m_right = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorRight);
+    m_horizontalCenter = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorHorizontalCenter);
+    m_verticalCenter = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorVerticalCenter);
 }
 
 AnchorsBasePrivate::~AnchorsBasePrivate()
@@ -143,9 +145,11 @@ void AnchorsBasePrivate::alignWhenCentered(bool c)
     m_alignWhenCentered = c;
 }
 
-AnchorsBase::AnchorsBase():
-    d_ptr(new AnchorsBasePrivate(Anchors<QWidget>::cast(this)))
+AnchorsBase::AnchorsBase(QWidget *w):
+    m_widget(w),
+    d_ptr(new AnchorsBasePrivate(this))
 {
+    Q_ASSERT(w);
 }
 
 AnchorsBase::~AnchorsBase()
