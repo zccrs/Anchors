@@ -5,6 +5,8 @@
 #include <QPointer>
 #include <QResizeEvent>
 #include <QMoveEvent>
+#include <QWidget>
+#include <QDebug>
 
 class AnchorWidgetObject: public QObject
 {
@@ -24,12 +26,15 @@ public:
     inline const AnchorWidgetObject *object() const
     {return m_object;}
 
+    ~AnchorWidget(){delete m_object;}
 protected:
      void resizeEvent(QResizeEvent * event) Q_DECL_OVERRIDE;
      void moveEvent(QMoveEvent * event) Q_DECL_OVERRIDE;
 
 private:
      const AnchorWidgetObject *m_object = new AnchorWidgetObject;
+     QSize old_size;
+     QPoint old_pos;
 };
 
 class AnchorsBase : public QObject
@@ -124,6 +129,8 @@ public:
         int horizontalCenterOffset = 0;
         int verticalCenterOffset = 0;
         bool alignWhenCentered = false;
+        QSize widget_old_size;
+        QPoint widget_old_pos;
     };
 
     const AnchorsBase *anchors() const;
@@ -162,6 +169,11 @@ public slots:
     void setVerticalCenterOffset(int verticalCenterOffset);
     void setAlignWhenCentered(bool alignWhenCentered);
 
+    void onXChanged(int x);
+    void onYChanged(int y);
+    void onWidthChanged(int width);
+    void onHeightChanged(int height);
+
 signals:
     void topChanged(const AnchorsInfo* top);
     void bottomChanged(const AnchorsInfo* bottom);
@@ -181,7 +193,8 @@ signals:
     void alignWhenCenteredChanged(bool alignWhenCentered);
 
 protected:
-    inline AnchorsBase(QWidget *w): data(new AnchorsData(w)){}
+    AnchorsBase(QWidget *w): data(new AnchorsData(w)){}
+    bool eventFilter(QObject *o, QEvent *e) Q_DECL_OVERRIDE;
 
     AnchorsData *data;
 };
@@ -190,25 +203,40 @@ template<class T>
 class Anchors : public AnchorsBase
 {
 public:
-    inline Anchors(): m_widget(new AnchorWidget<T>), AnchorsBase(m_widget){}
-    inline Anchors(AnchorWidget<T> *w): AnchorsBase(w), m_widget(w){}
-    inline Anchors(const Anchors &me): AnchorsBase(me.m_widget), m_widget(me.m_widget){}
+    inline Anchors(): AnchorsBase(new T){m_widget = qobject_cast<T*>(data->widget); init();}
+    inline Anchors(T *w): AnchorsBase(w), m_widget(w){init();}
+    inline Anchors(const Anchors &me): AnchorsBase(me.m_widget), m_widget(me.m_widget){init();}
 
-    inline AnchorWidget<T> &operator=(const Anchors &me)
+    inline T &operator=(const Anchors &me)
     { m_widget = me.m_widget, data->widget = m_widget; return *m_widget; }
-    inline AnchorWidget<T> &operator=(AnchorWidget<T>* w)
+    inline T &operator=(T* w)
     { m_widget = w; data->widget = w; return *m_widget; }
-    inline AnchorWidget<T>* widget() const
+    inline T* widget() const
     {return m_widget;}
-    inline AnchorWidget<T>* operator->() const
+    inline T* operator->() const
     { return widget(); }
-    inline AnchorWidget<T>& operator*() const
+    inline T& operator*() const
     { return *widget(); }
-    inline operator AnchorWidget<T>*() const
+    inline operator T*() const
     { return widget(); }
 
 private:
-    AnchorWidget<T> *m_widget;
+    T *m_widget;
+
+    void init(){
+        AnchorWidget<T> *tmp = dynamic_cast<AnchorWidget<T>*>(m_widget);
+
+        if(tmp){
+            const AnchorWidgetObject *obj = tmp->object();
+
+            connect(obj, SIGNAL(xChanged(int)), SLOT(onXChanged(int)));
+            connect(obj, SIGNAL(yChanged(int)), SLOT(onYChanged(int)));
+            connect(obj, SIGNAL(widthChanged(int)), SLOT(onWidthChanged(int)));
+            connect(obj, SIGNAL(heightChanged(int)), SLOT(onHeightChanged(int)));
+        }else{
+            data->widget->installEventFilter(this);
+        }
+    }
 };
 
 
@@ -217,11 +245,13 @@ void AnchorWidget<T>::resizeEvent(QResizeEvent *event)
 {
     QSize size = event->size();
 
-    if(size.width() != T::width())
+    if(size.width() != old_size.width())
         emit m_object->widthChanged(size.width());
 
-    if(size.height() != T::height())
+    if(size.height() != old_size.height())
         emit m_object->heightChanged(size.height());
+
+    old_size = size;
 
     T::resizeEvent(event);
 }
@@ -231,11 +261,13 @@ void AnchorWidget<T>::moveEvent(QMoveEvent *event)
 {
     QPoint pos = event->pos();
 
-    if(pos.x() != T::x())
+    if(pos.x() != old_pos.x())
         emit m_object->xChanged(pos.x());
 
-    if(pos.y() != T::y())
+    if(pos.y() != old_pos.y())
         emit m_object->yChanged(pos.y());
+
+    old_pos = pos;
 
     T::moveEvent(event);
 }

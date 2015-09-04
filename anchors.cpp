@@ -1,3 +1,5 @@
+#include <QDebug>
+
 #include "anchors.h"
 
 const AnchorsBase *AnchorsBase::anchors() const
@@ -227,4 +229,60 @@ void AnchorsBase::setAlignWhenCentered(bool alignWhenCentered)
 
     data->alignWhenCentered = alignWhenCentered;
     emit alignWhenCenteredChanged(alignWhenCentered);
+}
+
+void AnchorsBase::onXChanged(int x)
+{
+    qDebug()<<"xchanged:"<<x<<sender();
+}
+
+void AnchorsBase::onYChanged(int y)
+{
+    qDebug()<<"ychanged:"<<y<<sender();
+}
+
+void AnchorsBase::onWidthChanged(int width)
+{
+    qDebug()<<"widthchanged:"<<width<<sender();
+}
+
+void AnchorsBase::onHeightChanged(int height)
+{
+    qDebug()<<"heightchanged:"<<height<<sender();
+}
+
+bool AnchorsBase::eventFilter(QObject *o, QEvent *e)
+{
+    if( o == data->widget ){
+        if(e->type() == QEvent::Resize){
+            QResizeEvent *event = static_cast<QResizeEvent*>(e);
+            if(event){
+                QSize size = event->size();
+
+                if(size.width() != data->widget_old_size.width())
+                    onWidthChanged(size.width());
+
+                if(size.height() != data->widget_old_size.height())
+                    onHeightChanged(size.height());
+
+                data->widget_old_size = size;
+            }
+        }else if(e->type() == QEvent::Move){
+            QMoveEvent *event = static_cast<QMoveEvent*>(e);
+
+            if(event){
+                QPoint pos = event->pos();
+
+                if(pos.x() != data->widget_old_pos.x())
+                    onXChanged(pos.x());
+
+                if(pos.y() != data->widget_old_pos.y())
+                    onYChanged(pos.y());
+
+                data->widget_old_pos = pos;
+            }
+        }
+    }
+
+    return false;
 }
