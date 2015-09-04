@@ -1,277 +1,230 @@
 #include "anchors.h"
-#include <QDebug>
 
-AnchorsBasePrivate::AnchorsBasePrivate(AnchorsBase *parent):
-    QObject(),
-    m_fill(0),
-    m_centerIn(0),
-    m_margins(0),
-    m_topMargin(0),
-    m_bottomMargin(0),
-    m_leftMargin(0),
-    m_rightMargin(0),
-    m_horizontalCenterOffset(0),
-    m_verticalCenterOffset(0),
-    m_alignWhenCentered(false),
-    q_ptr(parent)
+const AnchorsBase *AnchorsBase::anchors() const
 {
-    Q_ASSERT(parent);
-
-    m_top = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorTop);
-    m_bottom = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorBottom);
-    m_left = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorLeft);
-    m_right = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorRight);
-    m_horizontalCenter = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorHorizontalCenter);
-    m_verticalCenter = new AnchorsBase::AnchorsInfo(q_ptr->m_widget, Qt::AnchorVerticalCenter);
+    return this;
 }
 
-AnchorsBasePrivate::~AnchorsBasePrivate()
+const AnchorsBase::AnchorsInfo *AnchorsBase::top() const
 {
-    delete m_top;
-    delete m_bottom;
-    delete m_left;
-    delete m_right;
-    delete m_horizontalCenter;
-    delete m_verticalCenter;
+    return data->top;
 }
 
-void AnchorsBasePrivate::top(const AnchorsBase::AnchorsInfo *info)
+const AnchorsBase::AnchorsInfo *AnchorsBase::bottom() const
 {
-    if(info==NULL || info->me == NULL)
+    return data->bottom;
+}
+
+const AnchorsBase::AnchorsInfo *AnchorsBase::left() const
+{
+    return data->left;
+}
+
+const AnchorsBase::AnchorsInfo *AnchorsBase::right() const
+{
+    return data->right;
+}
+
+const AnchorsBase::AnchorsInfo *AnchorsBase::horizontalCenter() const
+{
+    return data->horizontalCenter;
+}
+
+const AnchorsBase::AnchorsInfo *AnchorsBase::verticalCenter() const
+{
+    return data->verticalCenter;
+}
+
+const QWidget *AnchorsBase::fill() const
+{
+    return data->fill;
+}
+
+const QWidget *AnchorsBase::centerIn() const
+{
+    return data->centerIn;
+}
+
+int AnchorsBase::margins() const
+{
+    return data->margins;
+}
+
+int AnchorsBase::topMargin() const
+{
+    return data->topMargin;
+}
+
+int AnchorsBase::bottomMargin() const
+{
+    return data->bottomMargin;
+}
+
+int AnchorsBase::leftMargin() const
+{
+    return data->leftMargin;
+}
+
+int AnchorsBase::rightMargin() const
+{
+    return data->rightMargin;
+}
+
+int AnchorsBase::horizontalCenterOffset() const
+{
+    return data->horizontalCenterOffset;
+}
+
+int AnchorsBase::verticalCenterOffset() const
+{
+    return data->verticalCenterOffset;
+}
+
+int AnchorsBase::alignWhenCentered() const
+{
+    return data->alignWhenCentered;
+}
+
+void AnchorsBase::setTop(const AnchorsBase::AnchorsInfo* top)
+{
+    if (top == NULL || *data->top == top)
         return;
 
-    m_top->target = info->me;
-    m_top->targetType = info->type;
+    *data->top = top;
+    emit topChanged(data->top);
 }
 
-void AnchorsBasePrivate::bottom(const AnchorsBase::AnchorsInfo *info)
+void AnchorsBase::setBottom(const AnchorsBase::AnchorsInfo* bottom)
 {
-    if(info==NULL || info->me == NULL)
+    if (bottom == NULL || *data->bottom == bottom)
         return;
 
-    m_top->target = info->me;
-    m_top->targetType = info->type;
+    *data->bottom = bottom;
+    emit bottomChanged(data->bottom);
 }
 
-void AnchorsBasePrivate::left(const AnchorsBase::AnchorsInfo *info)
+void AnchorsBase::setLeft(const AnchorsBase::AnchorsInfo* left)
 {
-    if(info==NULL || info->me == NULL)
+    if (left == NULL || *data->left == left)
         return;
 
-    m_top->target = info->me;
-    m_top->targetType = info->type;
+    *data->left = left;
+    emit leftChanged(data->left);
 }
 
-void AnchorsBasePrivate::right(const AnchorsBase::AnchorsInfo *info)
+void AnchorsBase::setRight(const AnchorsBase::AnchorsInfo* right)
 {
-    if(info==NULL || info->me == NULL)
+    if (right == NULL || *data->right == right)
         return;
 
-    m_top->target = info->me;
-    m_top->targetType = info->type;
+    *data->right = right;
+    emit rightChanged(data->right);
 }
 
-void AnchorsBasePrivate::horizontalCenter(const AnchorsBase::AnchorsInfo *info)
+void AnchorsBase::setHorizontalCenter(const AnchorsBase::AnchorsInfo* horizontalCenter)
 {
-    if(info==NULL || info->me == NULL)
+    if (horizontalCenter == NULL || *data->horizontalCenter == horizontalCenter)
         return;
 
-    m_top->target = info->me;
-    m_top->targetType = info->type;
+    *data->horizontalCenter = horizontalCenter;
+    emit horizontalCenterChanged(data->horizontalCenter);
 }
 
-void AnchorsBasePrivate::verticalCenter(const AnchorsBase::AnchorsInfo *info)
+void AnchorsBase::setVerticalCenter(const AnchorsBase::AnchorsInfo* verticalCenter)
 {
-    if(info==NULL || info->me == NULL)
+    if (verticalCenter == NULL || *data->verticalCenter == verticalCenter)
         return;
 
-    m_top->target = info->me;
-    m_top->targetType = info->type;
+    *data->verticalCenter = verticalCenter;
+    emit verticalCenterChanged(data->verticalCenter);
 }
 
-void AnchorsBasePrivate::fill(const QWidget *w)
+void AnchorsBase::setFill(const QWidget* fill)
 {
-    if(w == NULL)
+    if (data->fill == fill)
         return;
 
-    m_fill = w;
+    data->fill = fill;
+    emit fillChanged(fill);
 }
 
-void AnchorsBasePrivate::centerIn(const QWidget *w)
+void AnchorsBase::setCenterIn(const QWidget* centerIn)
 {
-    if(w == NULL)
+    if (data->centerIn == centerIn)
         return;
 
-    m_centerIn = w;
+    data->centerIn = centerIn;
+    emit centerInChanged(centerIn);
 }
 
-void AnchorsBasePrivate::margins(int m)
+void AnchorsBase::setMargins(int margins)
 {
-    m_margins = m;
+    if (data->margins == margins)
+        return;
+
+    data->margins = margins;
+    emit marginsChanged(margins);
 }
 
-void AnchorsBasePrivate::topMargin(int m)
+void AnchorsBase::setTopMargin(int topMargin)
 {
-    m_topMargin = m;
+    if (data->topMargin == topMargin)
+        return;
+
+    data->topMargin = topMargin;
+    emit topMarginChanged(topMargin);
 }
 
-void AnchorsBasePrivate::bottomMargin(int m)
+void AnchorsBase::setBottomMargin(int bottomMargin)
 {
-    m_bottomMargin = m;
+    if (data->bottomMargin == bottomMargin)
+        return;
+
+    data->bottomMargin = bottomMargin;
+    emit bottomMarginChanged(bottomMargin);
 }
 
-void AnchorsBasePrivate::leftMargin(int m)
+void AnchorsBase::setLeftMargin(int leftMargin)
 {
-    m_leftMargin = m;
+    if (data->leftMargin == leftMargin)
+        return;
+
+    data->leftMargin = leftMargin;
+    emit leftMarginChanged(leftMargin);
 }
 
-void AnchorsBasePrivate::rightMargin(int m)
+void AnchorsBase::setRightMargin(int rightMargin)
 {
-    m_rightMargin = m;
+    if (data->rightMargin == rightMargin)
+        return;
+
+    data->rightMargin = rightMargin;
+    emit rightMarginChanged(rightMargin);
 }
 
-void AnchorsBasePrivate::horizontalCenterOffset(int o)
+void AnchorsBase::setHorizontalCenterOffset(int horizontalCenterOffset)
 {
-    m_horizontalCenterOffset = o;
+    if (data->horizontalCenterOffset == horizontalCenterOffset)
+        return;
+
+    data->horizontalCenterOffset = horizontalCenterOffset;
+    emit horizontalCenterOffsetChanged(horizontalCenterOffset);
 }
 
-void AnchorsBasePrivate::verticalCenterOffset(int o)
+void AnchorsBase::setVerticalCenterOffset(int verticalCenterOffset)
 {
-    m_verticalCenterOffset = o;
+    if (data->verticalCenterOffset == verticalCenterOffset)
+        return;
+
+    data->verticalCenterOffset = verticalCenterOffset;
+    emit verticalCenterOffsetChanged(verticalCenterOffset);
 }
 
-void AnchorsBasePrivate::alignWhenCentered(bool c)
+void AnchorsBase::setAlignWhenCentered(bool alignWhenCentered)
 {
-    m_alignWhenCentered = c;
-}
+    if (data->alignWhenCentered == alignWhenCentered)
+        return;
 
-AnchorsBase::AnchorsBase(QWidget *w):
-    m_widget(w),
-    d_ptr(new AnchorsBasePrivate(this))
-{
-    Q_ASSERT(w);
-}
-
-AnchorsBase::~AnchorsBase()
-{
-    Q_D(AnchorsBase);
-
-    d->deleteLater();
-}
-
-const AnchorsBase::AnchorsInfo *AnchorsBase::top()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_top;
-}
-
-const AnchorsBase::AnchorsInfo *AnchorsBase::bottom()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_bottom;
-}
-
-const AnchorsBase::AnchorsInfo *AnchorsBase::left()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_left;
-}
-
-const AnchorsBase::AnchorsInfo *AnchorsBase::right()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_right;
-}
-
-const AnchorsBase::AnchorsInfo *AnchorsBase::horizontalCenter()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_horizontalCenter;
-}
-
-const AnchorsBase::AnchorsInfo *AnchorsBase::verticalCenter()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_verticalCenter;
-}
-
-const QWidget *AnchorsBase::fill()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_fill;
-}
-
-const QWidget *AnchorsBase::centerIn()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_centerIn;
-}
-
-int AnchorsBase::margins()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_margins;
-}
-
-int AnchorsBase::topMargin()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_topMargin;
-}
-
-int AnchorsBase::bottomMargin()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_bottomMargin;
-}
-
-int AnchorsBase::leftMargin()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_leftMargin;
-}
-
-int AnchorsBase::rightMargin()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_rightMargin;
-}
-
-int AnchorsBase::horizontalCenterOffset()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_horizontalCenterOffset;
-}
-
-int AnchorsBase::verticalCenterOffset()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_verticalCenterOffset;
-}
-
-int AnchorsBase::alignWhenCentered()
-{
-    Q_D(AnchorsBase);
-
-    return d->m_alignWhenCentered;
-}
-
-AnchorsBasePrivate *AnchorsBase::anchors() const
-{
-    return d_ptr;
+    data->alignWhenCentered = alignWhenCentered;
+    emit alignWhenCenteredChanged(alignWhenCentered);
 }
