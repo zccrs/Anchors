@@ -8,41 +8,133 @@
 #include <QWidget>
 #include <QDebug>
 
-class AnchorWidgetData: public QObject
+class ExtendWidgetPrivate;
+class ExtendWidget: public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY(QWidget* target READ target WRITE setTarget NOTIFY targetChanged)
+public:
+    explicit ExtendWidget(QWidget *w, QObject *parent = 0);
+    ~ExtendWidget();
+
+    QWidget* target() const;
+
+public slots:
+    void setTarget(QWidget* target);
+
 signals:
-    void xChanged(int x) const;
-    void yChanged(int y) const;
-    void widthChanged(int width) const;
-    void heightChanged(int height) const;
+    void xChanged(int x);
+    void yChanged(int y);
+    void positionChanged(const QPoint& point);
+    void widthChanged(int width);
+    void heightChanged(int height);
+    void sizeChanged(const QSize &size);
+    void targetChanged(QWidget* target);
+
+protected:
+    bool eventFilter(QObject *o, QEvent *e) Q_DECL_OVERRIDE;
 
 private:
-    QSize old_size;
-    QPoint old_pos;
+    explicit ExtendWidget(ExtendWidgetPrivate *dd, QWidget *w, QObject *parent = 0);
+
+    ExtendWidgetPrivate *d_ptr;
+
+    Q_DECLARE_PRIVATE(ExtendWidget)
 };
 
-template<class T>
-class AnchorWidget : public T
+class AnchorsBase;
+struct AnchorsInfo
+{
+    AnchorsInfo(AnchorsBase *b, const Qt::AnchorPoint &t):
+        base(b),
+        type(t)
+    {
+    }
+
+    AnchorsBase *base;
+    Qt::AnchorPoint type;
+    const AnchorsInfo *targetInfo = NULL;
+
+    bool operator==(const AnchorsInfo *info) const{
+        return info == targetInfo;
+    }
+
+    bool operator==(const AnchorsInfo &info) const{
+        return &info == targetInfo;
+    }
+
+    bool operator!=(const AnchorsInfo *info) const{
+        return info != targetInfo;
+    }
+
+    bool operator!=(const AnchorsInfo &info) const{
+        return &info != targetInfo;
+    }
+
+    const AnchorsInfo& operator=(const AnchorsInfo *info){
+        targetInfo = info;
+
+        return *this;
+    }
+};
+
+class AnchorsRect: public QRect
 {
 public:
-    inline const AnchorWidgetData *object() const
-    {return m_data;}
+    AnchorsRect(const QRect &rect): QRect(rect.left(), rect.top(), rect.right(), rect.bottom()){}
+    const QRect& operator=(const QRect &rect){
+        setTopLeft(rect.topLeft());
+        setBottomRight(rect.bottomRight());
 
-    ~AnchorWidget(){delete m_data;}
-protected:
-     void resizeEvent(QResizeEvent * event) Q_DECL_OVERRIDE;
-     void moveEvent(QMoveEvent * event) Q_DECL_OVERRIDE;
+        return *this;
+    }
+
+    int horizontalCenter(){
+        return left() + width()/2;
+    }
+
+    void moveHorizontalCenter(int arg){
+        moveLeft(arg - width()/2);
+    }
+
+    int verticalCenter(){
+        return top() + height()/2;
+    }
+
+    void moveVerticalCenter(int arg){
+        moveTop(arg - height()/2);
+    }
+
+    void setMargins(int arg){
+        if(topMargin == 0)
+            setTop(top() + arg);
+        if(bottomMargin == 0)
+            setBottom(bottom() - arg);
+        if(leftMargin == 0)
+            setLeft(left() + arg);
+        if(rightMargin == 0)
+            setRight(right() - arg);
+    }
+
+    void setTopMargin(int arg){
+
+    }
 
 private:
-     const AnchorWidgetData *m_data = new AnchorWidgetData;
+    int margins = 0;
+    int topMargin = 0;
+    int bottomMargin = 0;
+    int leftMargin = 0;
+    int rightMargin = 0;
 };
 
+class AnchorsBasePrivate;
 class AnchorsBase : public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY(QWidget* target READ target WRITE setTarget NOTIFY targetChanged)
     Q_PROPERTY(const AnchorsBase* anchors READ anchors)
     Q_PROPERTY(const AnchorsInfo* top READ top WRITE setTop NOTIFY topChanged)
     Q_PROPERTY(const AnchorsInfo* bottom READ bottom WRITE setBottom NOTIFY bottomChanged)
@@ -50,8 +142,8 @@ class AnchorsBase : public QObject
     Q_PROPERTY(const AnchorsInfo* right READ right WRITE setRight NOTIFY rightChanged)
     Q_PROPERTY(const AnchorsInfo* horizontalCenter READ horizontalCenter WRITE setHorizontalCenter NOTIFY horizontalCenterChanged)
     Q_PROPERTY(const AnchorsInfo* verticalCenter READ verticalCenter WRITE setVerticalCenter NOTIFY verticalCenterChanged)
-    Q_PROPERTY(const QWidget* fill READ fill WRITE setFill NOTIFY fillChanged)
-    Q_PROPERTY(const QWidget* centerIn READ centerIn WRITE setCenterIn NOTIFY centerInChanged)
+    Q_PROPERTY(QWidget* fill READ fill WRITE setFill NOTIFY fillChanged)
+    Q_PROPERTY(QWidget* centerIn READ centerIn WRITE setCenterIn NOTIFY centerInChanged)
     Q_PROPERTY(int margins READ margins WRITE setMargins NOTIFY marginsChanged)
     Q_PROPERTY(int topMargin READ topMargin WRITE setTopMargin NOTIFY topMarginChanged)
     Q_PROPERTY(int bottomMargin READ bottomMargin WRITE setBottomMargin NOTIFY bottomMarginChanged)
@@ -62,79 +154,18 @@ class AnchorsBase : public QObject
     Q_PROPERTY(bool alignWhenCentered READ alignWhenCentered WRITE setAlignWhenCentered NOTIFY alignWhenCenteredChanged)
 
 public:
-    struct AnchorsInfo
-    {
-        AnchorsInfo(QWidget *w, Qt::AnchorPoint tp):
-            me(w),
-            target(NULL),
-            type(tp),
-            targetType(tp)
-        {
-        }
+    explicit AnchorsBase(QWidget *w);
+    ~AnchorsBase();
 
-        QWidget *me;
-        QWidget *target;
-        Qt::AnchorPoint type;
-        Qt::AnchorPoint targetType;
-
-        bool operator==(const AnchorsInfo *info) const{
-            return info->target == target && info->type == type && info->targetType == targetType;
-        }
-
-        bool operator==(const AnchorsInfo &info) const{
-            return info.target == target && info.type == type && info.targetType == targetType;
-        }
-
-        bool operator!=(const AnchorsInfo *info) const{
-            return info->target != target || info->type != type || info->targetType != targetType;
-        }
-
-        bool operator!=(const AnchorsInfo &info) const{
-            return info.target != target || info.type != type || info.targetType != targetType;
-        }
-
-        const AnchorsInfo& operator=(const AnchorsInfo *info){
-            target = info->target;
-            type = info->type;
-            targetType = info->targetType;
-
-            return *this;
-        }
-
-        const AnchorsInfo& operator=(const AnchorsInfo &info){
-            target = info.target;
-            type = info.type;
-            targetType = info.targetType;
-
-            return *this;
-        }
+    enum AnchorError{
+        NoError,
+        Conflict,
+        TargetInvalid,
+        PointInvalid,
+        LoopBind
     };
 
-    struct AnchorsData{
-        AnchorsData(QWidget *w):
-            widget(w){}
-
-        QWidget *widget;
-        AnchorsInfo* top = new AnchorsInfo(widget, Qt::AnchorTop);
-        AnchorsInfo* bottom = new AnchorsInfo(widget, Qt::AnchorBottom);
-        AnchorsInfo* left = new AnchorsInfo(widget, Qt::AnchorLeft);
-        AnchorsInfo* right = new AnchorsInfo(widget, Qt::AnchorRight);
-        AnchorsInfo* horizontalCenter = new AnchorsInfo(widget, Qt::AnchorHorizontalCenter);
-        AnchorsInfo* verticalCenter = new AnchorsInfo(widget, Qt::AnchorVerticalCenter);
-        const QWidget* fill = NULL;
-        const QWidget* centerIn = NULL;
-        int margins = 0;
-        int topMargin = 0;
-        int bottomMargin = 0;
-        int leftMargin = 0;
-        int rightMargin = 0;
-        int horizontalCenterOffset = 0;
-        int verticalCenterOffset = 0;
-        bool alignWhenCentered = false;
-        QSize widget_old_size;
-        QPoint widget_old_pos;
-    };
-
+    QWidget* target() const;
     const AnchorsBase *anchors() const;
     const AnchorsInfo *top() const;
     const AnchorsInfo *bottom() const;
@@ -142,8 +173,8 @@ public:
     const AnchorsInfo *right() const;
     const AnchorsInfo *horizontalCenter() const;
     const AnchorsInfo *verticalCenter() const;
-    const QWidget *fill() const;
-    const QWidget *centerIn() const;
+    QWidget *fill() const;
+    QWidget *centerIn() const;
     int margins() const;
     int topMargin() const;
     int bottomMargin() const;
@@ -152,16 +183,22 @@ public:
     int horizontalCenterOffset() const;
     int verticalCenterOffset() const;
     int alignWhenCentered() const;
+    AnchorError errorCode() const;
+    QString errorString() const;
+
+    static bool setAnchor(QWidget *w, const Qt::AnchorPoint &p, QWidget *target, const Qt::AnchorPoint &point);
 
 public slots:
-    void setTop(const AnchorsInfo* top);
-    void setBottom(const AnchorsInfo* bottom);
-    void setLeft(const AnchorsInfo* left);
-    void setRight(const AnchorsInfo* right);
-    void setHorizontalCenter(const AnchorsInfo* horizontalCenter);
-    void setVerticalCenter(const AnchorsInfo* verticalCenter);
-    void setFill(const QWidget* fill);
-    void setCenterIn(const QWidget* centerIn);
+    void setTarget(QWidget* target);
+    bool setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt::AnchorPoint &point);
+    bool setTop(const AnchorsInfo* top);
+    bool setBottom(const AnchorsInfo* bottom);
+    bool setLeft(const AnchorsInfo* left);
+    bool setRight(const AnchorsInfo* right);
+    bool setHorizontalCenter(const AnchorsInfo* horizontalCenter);
+    bool setVerticalCenter(const AnchorsInfo* verticalCenter);
+    bool setFill(QWidget* fill);
+    bool setCenterIn(QWidget* centerIn);
     void setMargins(int margins);
     void setTopMargin(int topMargin);
     void setBottomMargin(int bottomMargin);
@@ -171,10 +208,28 @@ public slots:
     void setVerticalCenterOffset(int verticalCenterOffset);
     void setAlignWhenCentered(bool alignWhenCentered);
 
-    void onXChanged(int x);
-    void onYChanged(int y);
-    void onWidthChanged(int width);
-    void onHeightChanged(int height);
+    void setTop(int arg);
+    void setBottom(int arg);
+    void setLeft(int arg);
+    void setRight(int arg);
+
+    void moveTop(int arg);
+    void moveBottom(int arg);
+    void moveLeft(int arg);
+    void moveRight(int arg);
+    void moveHorizontalCenter(int arg);
+    void moveVerticalCenter(int arg);
+    void moveCenter(const QPoint &arg);
+
+private slots:
+    void updateTop();
+    void updateBottom();
+    void updateLeft();
+    void updateRight();
+    void updateHorizontalCenter();
+    void updateVerticalCenter();
+    void updateFill();
+    void updateCenterIn();
 
 signals:
     void topChanged(const AnchorsInfo* top);
@@ -183,8 +238,8 @@ signals:
     void rightChanged(const AnchorsInfo* right);
     void horizontalCenterChanged(const AnchorsInfo* horizontalCenter);
     void verticalCenterChanged(const AnchorsInfo* verticalCenter);
-    void fillChanged(const QWidget* fill);
-    void centerInChanged(const QWidget* centerIn);
+    void fillChanged(QWidget* fill);
+    void centerInChanged(QWidget* centerIn);
     void marginsChanged(int margins);
     void topMarginChanged(int topMargin);
     void bottomMarginChanged(int bottomMargin);
@@ -194,25 +249,29 @@ signals:
     void verticalCenterOffsetChanged(int verticalCenterOffset);
     void alignWhenCenteredChanged(bool alignWhenCentered);
 
-protected:
-    AnchorsBase(QWidget *w): data(new AnchorsData(w)){}
-    bool eventFilter(QObject *o, QEvent *e) Q_DECL_OVERRIDE;
+    void targetChanged(QWidget* target);
 
-    AnchorsData *data;
+protected:
+    explicit AnchorsBase(AnchorsBasePrivate *dd, QWidget *w);
+    void setWidget(QWidget *w);
+
+    AnchorsBasePrivate *d_ptr;
+
+    Q_DECLARE_PRIVATE(AnchorsBase)
 };
 
 template<class T>
 class Anchors : public AnchorsBase
 {
 public:
-    inline Anchors(): AnchorsBase(new T){m_widget = qobject_cast<T*>(data->widget); init();}
-    inline Anchors(T *w): AnchorsBase(w), m_widget(w){init();}
-    inline Anchors(const Anchors &me): AnchorsBase(me.m_widget), m_widget(me.m_widget){init();}
+    inline Anchors(): AnchorsBase(new T){m_widget = qobject_cast<T*>(target());}
+    inline Anchors(T *w): AnchorsBase(w), m_widget(w){}
+    inline Anchors(const Anchors &me): AnchorsBase(me.m_widget), m_widget(me.m_widget){}
 
     inline T &operator=(const Anchors &me)
-    { m_widget = me.m_widget, data->widget = m_widget; return *m_widget; }
+    { m_widget = me.m_widget, setTarget(m_widget); return *m_widget; }
     inline T &operator=(T* w)
-    { m_widget = w; data->widget = w; return *m_widget; }
+    { m_widget = w; setTarget(w); return *m_widget; }
     inline T* widget() const
     {return m_widget;}
     inline T* operator->() const
@@ -224,54 +283,6 @@ public:
 
 private:
     T *m_widget;
-
-    void init(){
-        AnchorWidget<T> *tmp = dynamic_cast<AnchorWidget<T>*>(m_widget);
-
-        if(tmp){
-            const QObject *obj = tmp->object();
-
-            connect(obj, SIGNAL(xChanged(int)), SLOT(onXChanged(int)));
-            connect(obj, SIGNAL(yChanged(int)), SLOT(onYChanged(int)));
-            connect(obj, SIGNAL(widthChanged(int)), SLOT(onWidthChanged(int)));
-            connect(obj, SIGNAL(heightChanged(int)), SLOT(onHeightChanged(int)));
-        }else{
-            data->widget->installEventFilter(this);
-        }
-    }
 };
-
-
-template<class T>
-void AnchorWidget<T>::resizeEvent(QResizeEvent *event)
-{
-    QSize size = event->size();
-
-    if(size.width() != m_data->old_size.width())
-        emit m_data->widthChanged(size.width());
-
-    if(size.height() != m_data->old_size.height())
-        emit m_data->heightChanged(size.height());
-
-    m_data->old_size = size;
-
-    T::resizeEvent(event);
-}
-
-template<class T>
-void AnchorWidget<T>::moveEvent(QMoveEvent *event)
-{
-    QPoint pos = event->pos();
-
-    if(pos.x() != m_data->old_pos.x())
-        emit m_data->xChanged(pos.x());
-
-    if(pos.y() != m_data->old_pos.y())
-        emit m_data->yChanged(pos.y());
-
-    m_data->old_pos = pos;
-
-    T::moveEvent(event);
-}
 
 #endif // ANCHORS_H

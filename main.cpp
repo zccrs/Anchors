@@ -11,5 +11,11 @@ int main(int argc, char *argv[])
     Anchors<MainWindow> w;
     w->show();
 
+    QRect rect(100, 100, 100, 100);
+
+    rect.marginsAdded(QMargins(10, 20, 30, 40));
+
+    qDebug()<<rect;
+
     return a.exec();
 }
