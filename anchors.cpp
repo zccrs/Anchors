@@ -101,7 +101,8 @@ ExtendWidget::ExtendWidget(ExtendWidgetPrivate *dd, QWidget *w, QObject *parent)
     QObject(parent),
     d_ptr(dd)
 {
-    w->installEventFilter(this);
+    if(w)
+        w->installEventFilter(this);
 }
 
 class AnchorsBasePrivate
@@ -142,7 +143,7 @@ class AnchorsBasePrivate
         }
     }
 
-    const AnchorsInfo* getInfoByPoint(const Qt::AnchorPoint &p) const{
+    const AnchorInfo* getInfoByPoint(const Qt::AnchorPoint &p) const{
         switch (p) {
         case Qt::AnchorTop:
             return top;
@@ -161,7 +162,7 @@ class AnchorsBasePrivate
         }
     }
 
-    bool checkInfo(const AnchorsInfo* info1, const AnchorsInfo *info2){
+    bool checkInfo(const AnchorInfo* info1, const AnchorInfo *info2){
         const Qt::AnchorPoint &p = info2->type;
 
         switch (info1->type) {
@@ -178,30 +179,36 @@ class AnchorsBasePrivate
         }
     }
 
-    int getValueByInfo(const AnchorsInfo *info){
-//        switch (info1->type) {
-//        case Qt::AnchorTop:
-//            return info->base->target()->geometry().top();
-//        case Qt::AnchorBottom:
-//            return info->base->target()->geometry().bottom();
-//        case Qt::AnchorHorizontalCenter:
-//            return (p == Qt::AnchorTop || p == Qt::AnchorBottom || p == Qt::AnchorVerticalCenter);
-//        case Qt::AnchorLeft://Deliberate
-//        case Qt::AnchorRight://Deliberate
-//        case Qt::AnchorVerticalCenter:
-//            return (p == Qt::AnchorLeft || p == Qt::AnchorRight || p == Qt::AnchorHorizontalCenter);
-//        default:
-//            return false;
-//        }
+    int getValueByInfo(const AnchorInfo *info){
+        ARect rect = info->base->target()->geometry();
+
+        switch (info->type) {
+        case Qt::AnchorTop:
+            return rect.top();
+        case Qt::AnchorBottom:
+            return rect.bottom();
+        case Qt::AnchorHorizontalCenter:
+            return rect.horizontalCenter();
+        case Qt::AnchorLeft:
+            return rect.left();
+        case Qt::AnchorRight:
+            return rect.right();
+        case Qt::AnchorVerticalCenter:
+            return rect.right();
+        default:
+            return 0;
+        }
     }
 
+    AnchorsBase *q_ptr;
+
     ExtendWidget *extendWidget = NULL;
-    AnchorsInfo* top = new AnchorsInfo(q_ptr, Qt::AnchorTop);
-    AnchorsInfo* bottom = new AnchorsInfo(q_ptr, Qt::AnchorBottom);
-    AnchorsInfo* left = new AnchorsInfo(q_ptr, Qt::AnchorLeft);
-    AnchorsInfo* right = new AnchorsInfo(q_ptr, Qt::AnchorRight);
-    AnchorsInfo* horizontalCenter = new AnchorsInfo(q_ptr, Qt::AnchorHorizontalCenter);
-    AnchorsInfo* verticalCenter = new AnchorsInfo(q_ptr, Qt::AnchorVerticalCenter);
+    AnchorInfo* top = new AnchorInfo(q_ptr, Qt::AnchorTop);
+    AnchorInfo* bottom = new AnchorInfo(q_ptr, Qt::AnchorBottom);
+    AnchorInfo* left = new AnchorInfo(q_ptr, Qt::AnchorLeft);
+    AnchorInfo* right = new AnchorInfo(q_ptr, Qt::AnchorRight);
+    AnchorInfo* horizontalCenter = new AnchorInfo(q_ptr, Qt::AnchorHorizontalCenter);
+    AnchorInfo* verticalCenter = new AnchorInfo(q_ptr, Qt::AnchorVerticalCenter);
     ExtendWidget* fill = new ExtendWidget(NULL, q_ptr);
     ExtendWidget* centerIn = new ExtendWidget(NULL, q_ptr);
     int margins = 0;
@@ -217,8 +224,6 @@ class AnchorsBasePrivate
     AnchorsBase::AnchorError errorCode = AnchorsBase::NoError;
     QString errorString;
     static QMap<const QWidget*, AnchorsBase*> widgetMap;
-
-    AnchorsBase *q_ptr;
 
     Q_DECLARE_PUBLIC(AnchorsBase)
 };
@@ -258,42 +263,42 @@ const AnchorsBase *AnchorsBase::anchors() const
     return this;
 }
 
-const AnchorsInfo *AnchorsBase::top() const
+const AnchorInfo *AnchorsBase::top() const
 {
     Q_D(const AnchorsBase);
 
     return d->top;
 }
 
-const AnchorsInfo *AnchorsBase::bottom() const
+const AnchorInfo *AnchorsBase::bottom() const
 {
     Q_D(const AnchorsBase);
 
     return d->bottom;
 }
 
-const AnchorsInfo *AnchorsBase::left() const
+const AnchorInfo *AnchorsBase::left() const
 {
     Q_D(const AnchorsBase);
 
     return d->left;
 }
 
-const AnchorsInfo *AnchorsBase::right() const
+const AnchorInfo *AnchorsBase::right() const
 {
     Q_D(const AnchorsBase);
 
     return d->right;
 }
 
-const AnchorsInfo *AnchorsBase::horizontalCenter() const
+const AnchorInfo *AnchorsBase::horizontalCenter() const
 {
     Q_D(const AnchorsBase);
 
     return d->horizontalCenter;
 }
 
-const AnchorsInfo *AnchorsBase::verticalCenter() const
+const AnchorInfo *AnchorsBase::verticalCenter() const
 {
     Q_D(const AnchorsBase);
 
@@ -407,7 +412,7 @@ void AnchorsBase::setTarget(QWidget *target)
 bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt::AnchorPoint &point)
 {
     AnchorsBase *base = AnchorsBasePrivate::getMap(target);
-    const AnchorsInfo* info = base->d_func()->getInfoByPoint(point);
+    const AnchorInfo* info = base->d_func()->getInfoByPoint(point);
 
     switch (p) {
     case Qt::AnchorTop:
@@ -427,321 +432,161 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
     }
 }
 
-bool AnchorsBase::setTop(const AnchorsInfo* top)
+#define ANCHOR_BIND_INFO(point, Point, signalsname...)\
+    Q_D(AnchorsBase);\
+    if(*d->point == point)\
+        return true;\
+    ExtendWidget *tmp_w1 = NULL;\
+    ExtendWidget *tmp_w2 = NULL;\
+    if(d->point->targetInfo){\
+        tmp_w1 = d->point->targetInfo->base->d_func()->extendWidget;\
+    }\
+    QStringList signalList = QString(#signalsname).split("),");\
+    if(point){\
+        if (point->base == this){\
+            d->errorCode = TargetInvalid;\
+            d->errorString = tr("Cannot anchor widget to self.");\
+            return false;\
+        }else if(target()->parentWidget() != point->base->target()){\
+            bool isBrother = false;\
+            foreach (const QWidget *w, target()->parentWidget()->findChildren<QWidget*>()) {\
+                if(w == point->base->target()){\
+                    isBrother = true;\
+                    break;\
+                }\
+            }\
+            if(!isBrother){\
+                d->errorCode = TargetInvalid;\
+                d->errorString = tr("Cannot anchor to an widget that isn't a parent or sibling.");\
+            }\
+        }\
+        if(!d->checkInfo(d->point, point)){\
+            d->errorCode = PointInvalid;\
+            d->errorString = tr("Cannot anchor a vertical/horizontal edge to a horizontal/vertical edge.");\
+        }\
+        int old_pos = d->getValueByInfo(point);\
+        AnchorInfo old_info = *d->point;\
+        *d->point = point;\
+        update##Point();\
+        if(old_pos != d->getValueByInfo(point)){\
+            *d->point = old_info;\
+            update##Point();\
+            d->errorCode = PointInvalid;\
+            d->errorString = tr("loop bind.");\
+        }\
+        tmp_w2 = point->base->d_func()->extendWidget;\
+        if(tmp_w1 != tmp_w2){\
+            foreach(const QString &str, signalList){\
+                QByteArray arr = str.toLatin1();\
+                if(tmp_w1)\
+                    disconnect(tmp_w1, QByteArray("2"+arr+")").data(), this, SLOT(update##Point()));\
+                connect(tmp_w2, QByteArray("2"+arr+")").data(), this, SLOT(update##Point()));\
+            }\
+        }\
+    }else{\
+    foreach(const QString &str, signalList){\
+        QByteArray arr = str.toLatin1();\
+            disconnect(tmp_w1, QByteArray("2"+arr+")").data(), this, SLOT(update##Point()));\
+        }\
+        *d->point = point;\
+        return true;\
+    }\
+    emit point##Changed(d->point);\
+    return true;\
+
+#define ANCHOR_BIND_WIDGET(point, Point, signalsname...)\
+    Q_D(AnchorsBase);\
+    if(d->point->target() == point)\
+        return true;\
+    ExtendWidget *tmp_w1 = d->point;\
+    ExtendWidget *tmp_w2 = NULL;\
+    QStringList signalList = QString(#signalsname).split("),");\
+    if(point){\
+        tmp_w2 = d->getMap(point)->d_func()->extendWidget;\
+        if (point == target()){\
+            d->errorCode = TargetInvalid;\
+            d->errorString = tr("Cannot anchor widget to self.");\
+            return false;\
+        }else if(target()->parentWidget() != point){\
+            bool isBrother = false;\
+            foreach (const QWidget *w, target()->parentWidget()->findChildren<QWidget*>()) {\
+                if(w == point){\
+                    isBrother = true;\
+                    break;\
+                }\
+            }\
+            if(!isBrother){\
+                d->errorCode = TargetInvalid;\
+                d->errorString = tr("Cannot anchor to an widget that isn't a parent or sibling.");\
+            }\
+        }\
+        QRect old_rect = point->geometry();\
+        ExtendWidget *old_widget = d->point;\
+        d->point = tmp_w2;\
+        update##Point();\
+        if(old_rect != point->geometry()){\
+            d->point = old_widget;\
+            update##Point();\
+            d->errorCode = PointInvalid;\
+            d->errorString = tr("loop bind.");\
+        }\
+        if(tmp_w1 != tmp_w2){\
+            foreach(const QString &str, signalList){\
+                QByteArray arr = str.toLatin1();\
+                if(tmp_w1)\
+                    disconnect(tmp_w1, QByteArray("2"+arr+")").data(), this, SLOT(update##Point()));\
+                connect(tmp_w2, QByteArray("2"+arr+")").data(), this, SLOT(update##Point()));\
+            }\
+        }\
+    }else{\
+    foreach(const QString &str, signalList){\
+        QByteArray arr = str.toLatin1();\
+            disconnect(tmp_w1, QByteArray("2"+arr+")").data(), this, SLOT(update##Point()));\
+        }\
+        d->point = tmp_w2;\
+        return true;\
+    }\
+    emit point##Changed(point);\
+    return true;\
+
+bool AnchorsBase::setTop(const AnchorInfo* top)
 {
-    Q_D(AnchorsBase);
-
-    if(*d->top == top)
-        return true;
-
-    ExtendWidget *tmp_w1 = NULL;
-    ExtendWidget *tmp_w2 = NULL;
-
-    if(d->top->targetInfo){
-        tmp_w1 = d->top->targetInfo->base->d_func()->extendWidget;
-    }
-
-    if(top){
-        if (top->base == this){
-            d->errorCode = TargetInvalid;
-            d->errorString = tr("Cannot anchor widget to self.");
-
-            return false;
-        }else if(target()->parentWidget() != top->base->target()){
-            bool isBrother = false;
-
-            foreach (const QWidget *w, target()->parentWidget()->findChildren<QWidget*>()) {
-                if(w == top->base->target()){
-                    isBrother = true;
-                    break;
-                }
-            }
-
-            if(!isBrother){
-                d->errorCode = TargetInvalid;
-                d->errorString = tr("Cannot anchor to an widget that isn't a parent or sibling.");
-            }
-        }
-
-        if(!d->checkInfo(d->top, top)){
-            d->errorCode = PointInvalid;
-            d->errorString = tr("Cannot anchor a vertical/horizontal edge to a horizontal/vertical edge.");
-        }
-
-        tmp_w2 = top->base->d_func()->extendWidget;
-        if(tmp_w1 != tmp_w2){
-            if(tmp_w1)
-                disconnect(tmp_w1, SIGNAL(yChanged(int)), this, SLOT(updateTop()));
-            connect(tmp_w2, SIGNAL(yChanged(int)), this, SLOT(updateTop()));
-        }
-
-        *d->top = top;
-        updateTop();
-    }else{
-        disconnect(tmp_w1, SIGNAL(yChanged(int)), this, SLOT(updateTop()));
-        *d->top = top;
-        return true;
-    }
-
-    emit topChanged(d->top);
-
-    return true;
+    ANCHOR_BIND_INFO(top,Top,yChanged(int))
 }
 
-bool AnchorsBase::setBottom(const AnchorsInfo* bottom)
+bool AnchorsBase::setBottom(const AnchorInfo* bottom)
 {
-    Q_D(AnchorsBase);
-
-    if(*d->bottom == bottom)
-        return true;
-
-    ExtendWidget *tmp_w1 = NULL;
-    ExtendWidget *tmp_w2 = NULL;
-
-    if(d->bottom->targetInfo){
-        tmp_w1 = d->bottom->targetInfo->base->d_func()->extendWidget;
-    }
-
-    if(bottom){
-        if (bottom->base == this){
-            d->errorCode = TargetInvalid;
-            d->errorString = tr("Cannot anchor widget to self.");
-
-            return false;
-        }
-
-        tmp_w2 = bottom->base->d_func()->extendWidget;
-        if(tmp_w1 != tmp_w2){
-            if(tmp_w1){
-                disconnect(tmp_w1, SIGNAL(yChanged(int)), this, SLOT(updateBottom()));
-                disconnect(tmp_w1, SIGNAL(heightChanged(int)), this, SLOT(updateBottom()));
-            }
-            connect(tmp_w2, SIGNAL(yChanged(int)), SLOT(updateBottom()));
-            connect(tmp_w2, SIGNAL(heightChanged(int)), SLOT(updateBottom()));
-        }
-    }else{
-        disconnect(tmp_w1, SIGNAL(yChanged(int)), this, SLOT(updateBottom()));
-        disconnect(tmp_w1, SIGNAL(heightChanged(int)), this, SLOT(updateBottom()));
-        *d->bottom = bottom;
-        return true;
-    }
-
-    *d->bottom = bottom;
-    updateTop();
-
-    emit bottomChanged(d->bottom);
-
-    return true;
+    ANCHOR_BIND_INFO(bottom,Bottom,yChanged(int),heightChanged(int))
 }
 
-bool AnchorsBase::setLeft(const AnchorsInfo* left)
+bool AnchorsBase::setLeft(const AnchorInfo* left)
 {
-    Q_D(AnchorsBase);
-
-    if (left->base == this){
-        d->errorCode = TargetInvalid;
-        d->errorString = tr("Cannot anchor widget to self.");
-
-        return false;
-    }
-    if(*d->left == left)
-        return true;
-
-    ExtendWidget *tmp_w;
-    if(d->left->targetInfo){
-        tmp_w = d->left->targetInfo->base->d_func()->extendWidget;
-        disconnect(tmp_w, SIGNAL(xChanged(int)), this, SLOT(updateLeft()));
-    }
-
-    *d->left = left;
-    if(left){
-        updateLeft();
-
-        tmp_w = left->base->d_func()->extendWidget;
-        connect(tmp_w, SIGNAL(xChanged(int)), SLOT(updateLeft()));
-    }
-
-    emit leftChanged(d->left);
-
-    return true;
+    ANCHOR_BIND_INFO(left,Left,xChanged(int))
 }
 
-bool AnchorsBase::setRight(const AnchorsInfo* right)
+bool AnchorsBase::setRight(const AnchorInfo* right)
 {
-    Q_D(AnchorsBase);
-
-    if (right->base == this){
-        d->errorCode = TargetInvalid;
-        d->errorString = tr("Cannot anchor widget to self.");
-
-        return false;
-    }
-    if(*d->right == right)
-        return true;
-
-    ExtendWidget *tmp_w;
-    if(d->right->targetInfo){
-        tmp_w = d->right->targetInfo->base->d_func()->extendWidget;
-        disconnect(tmp_w, SIGNAL(xChanged(int)), this, SLOT(updateRight()));
-        disconnect(tmp_w, SIGNAL(widthChanged(int)), this, SLOT(updateRight()));
-    }
-
-    *d->right = right;
-    if(right){
-        updateRight();
-
-        tmp_w = right->base->d_func()->extendWidget;
-        connect(tmp_w, SIGNAL(xChanged(int)), SLOT(updateRight()));
-        connect(tmp_w, SIGNAL(widthChanged(int)), SLOT(updateRight()));
-    }
-
-    emit rightChanged(d->right);
-
-    return true;
+    ANCHOR_BIND_INFO(right,Right,xChanged(int),widthChanged(int))
 }
 
-bool AnchorsBase::setHorizontalCenter(const AnchorsInfo* horizontalCenter)
+bool AnchorsBase::setHorizontalCenter(const AnchorInfo* horizontalCenter)
 {
-    Q_D(AnchorsBase);
-
-    if (horizontalCenter->base == this){
-        d->errorCode = TargetInvalid;
-        d->errorString = tr("Cannot anchor widget to self.");
-
-        return false;
-    }
-    if(*d->horizontalCenter == horizontalCenter)
-        return true;
-
-    ExtendWidget *tmp_w;
-    if(d->horizontalCenter->targetInfo){
-        tmp_w = d->horizontalCenter->targetInfo->base->d_func()->extendWidget;
-        disconnect(tmp_w, SIGNAL(xChanged(int)), this, SLOT(updateHorizontalCenter()));
-        disconnect(tmp_w, SIGNAL(widthChanged(int)), this, SLOT(updateHorizontalCenter()));
-    }
-
-    *d->horizontalCenter = horizontalCenter;
-    if(horizontalCenter){
-        updateHorizontalCenter();
-
-        tmp_w = horizontalCenter->base->d_func()->extendWidget;
-        connect(tmp_w, SIGNAL(xChanged(int)), SLOT(updateHorizontalCenter()));
-        connect(tmp_w, SIGNAL(widthChanged(int)), SLOT(updateHorizontalCenter()));
-    }
-
-    emit horizontalCenterChanged(d->horizontalCenter);
-
-    return true;
+    ANCHOR_BIND_INFO(horizontalCenter,HorizontalCenter,xChanged(int),widthChanged(int))
 }
 
-bool AnchorsBase::setVerticalCenter(const AnchorsInfo* verticalCenter)
+bool AnchorsBase::setVerticalCenter(const AnchorInfo* verticalCenter)
 {
-    Q_D(AnchorsBase);
-
-    if (verticalCenter->base == this){
-        d->errorCode = TargetInvalid;
-        d->errorString = tr("Cannot anchor widget to self.");
-
-        return false;
-    }
-    if(*d->verticalCenter == verticalCenter)
-        return true;
-
-    ExtendWidget *tmp_w;
-    if(d->verticalCenter->targetInfo){
-        tmp_w = d->verticalCenter->targetInfo->base->d_func()->extendWidget;
-        disconnect(tmp_w, SIGNAL(yChanged(int)), this, SLOT(updateVerticalCenter()));
-        disconnect(tmp_w, SIGNAL(heightChanged(int)), this, SLOT(updateVerticalCenter()));
-    }
-
-    *d->verticalCenter = verticalCenter;
-    if(verticalCenter){
-        updateVerticalCenter();
-
-        tmp_w = verticalCenter->base->d_func()->extendWidget;
-        connect(tmp_w, SIGNAL(yChanged(int)), SLOT(updateVerticalCenter()));
-        connect(tmp_w, SIGNAL(heightChanged(int)), SLOT(updateVerticalCenter()));
-    }
-
-    emit verticalCenterChanged(d->verticalCenter);
-
-    return true;
+    ANCHOR_BIND_INFO(verticalCenter,VerticalCenter,yChanged(int),heightChanged(int))
 }
 
 bool AnchorsBase::setFill(QWidget* fill)
 {
-    Q_D(AnchorsBase);
-
-    if (fill == target()){
-        d->errorCode = TargetInvalid;
-        d->errorString = tr("Cannot anchor widget to self.");
-
-        return false;
-    }
-
-    if(d->fill){
-        if(d->fill->target() == fill)
-            return true;
-        else
-            d->fill->deleteLater();
-    }
-
-    ExtendWidget *tmp_w;
-    if(d->fill){
-        tmp_w = d->fill;
-        disconnect(tmp_w, SIGNAL(positionChanged(int)), this, SLOT(updateFill()));
-        disconnect(tmp_w, SIGNAL(sizeChanged(int)), this, SLOT(updateFill()));
-    }
-
-    d->fill->setTarget(fill);
-    if(fill){
-        updateFill();
-
-        tmp_w = d->fill;
-        connect(tmp_w, SIGNAL(positionChanged(int)), SLOT(updateFill()));
-        connect(tmp_w, SIGNAL(sizeChanged(int)), SLOT(updateFill()));
-    }
-
-    emit fillChanged(fill);
-
-    return true;
+    ANCHOR_BIND_WIDGET(fill,Fill,positionChanged(int),sizeChanged(int))
 }
 
 bool AnchorsBase::setCenterIn(QWidget* centerIn)
 {
-    Q_D(AnchorsBase);
-
-    if (centerIn == target()){
-        d->errorCode = TargetInvalid;
-        d->errorString = tr("Cannot anchor widget to self.");
-
-        return false;
-    }
-
-    if(d->centerIn){
-        if(d->centerIn->target() == centerIn)
-            return true;
-        else
-            d->centerIn->deleteLater();
-    }
-
-    ExtendWidget *tmp_w;
-    if(d->centerIn){
-        tmp_w = d->centerIn;
-        disconnect(tmp_w, SIGNAL(positionChanged(int)), this, SLOT(updateCenterIn()));
-    }
-
-    d->centerIn->setTarget(centerIn);
-    if(centerIn){
-        updateCenterIn();
-
-        tmp_w = d->centerIn;
-        connect(tmp_w, SIGNAL(positionChanged(int)), SLOT(updateCenterIn()));
-    }
-
-    emit centerInChanged(centerIn);
-
-    return true;
+    ANCHOR_BIND_WIDGET(centerIn,CenterIn,positionChanged(int))
 }
 
 void AnchorsBase::setMargins(int margins)
@@ -933,16 +778,16 @@ void AnchorsBase::moveRight(int arg)
 
 void AnchorsBase::moveHorizontalCenter(int arg)
 {
-    QRect rect = target()->geometry();
-    rect.moveLeft(arg - rect.width()/2);
+    ARect rect = target()->geometry();
+    rect.moveHorizontalCenter(arg);
 
     target()->setGeometry(rect);
 }
 
 void AnchorsBase::moveVerticalCenter(int arg)
 {
-    QRect rect = target()->geometry();
-    rect.moveTop(arg - rect.height()/2);
+    ARect rect = target()->geometry();
+    rect.moveVerticalCenter(arg);
 
     target()->setGeometry(rect);
 }

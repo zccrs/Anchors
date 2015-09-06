@@ -11,11 +11,9 @@ int main(int argc, char *argv[])
     Anchors<MainWindow> w;
     w->show();
 
-    QRect rect(100, 100, 100, 100);
+    w.setTop(w.top());
 
-    rect.marginsAdded(QMargins(10, 20, 30, 40));
-
-    qDebug()<<rect;
+    qDebug()<<w.errorCode()<<w.errorString();
 
     return a.exec();
 }

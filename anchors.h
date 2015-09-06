@@ -44,9 +44,9 @@ private:
 };
 
 class AnchorsBase;
-struct AnchorsInfo
+struct AnchorInfo
 {
-    AnchorsInfo(AnchorsBase *b, const Qt::AnchorPoint &t):
+    AnchorInfo(AnchorsBase *b, const Qt::AnchorPoint &t):
         base(b),
         type(t)
     {
@@ -54,35 +54,36 @@ struct AnchorsInfo
 
     AnchorsBase *base;
     Qt::AnchorPoint type;
-    const AnchorsInfo *targetInfo = NULL;
+    const AnchorInfo *targetInfo = NULL;
 
-    bool operator==(const AnchorsInfo *info) const{
+    bool operator==(const AnchorInfo *info) const{
         return info == targetInfo;
     }
 
-    bool operator==(const AnchorsInfo &info) const{
+    bool operator==(const AnchorInfo &info) const{
         return &info == targetInfo;
     }
 
-    bool operator!=(const AnchorsInfo *info) const{
+    bool operator!=(const AnchorInfo *info) const{
         return info != targetInfo;
     }
 
-    bool operator!=(const AnchorsInfo &info) const{
+    bool operator!=(const AnchorInfo &info) const{
         return &info != targetInfo;
     }
 
-    const AnchorsInfo& operator=(const AnchorsInfo *info){
+    const AnchorInfo& operator=(const AnchorInfo *info){
         targetInfo = info;
 
         return *this;
     }
 };
 
-class AnchorsRect: public QRect
+class ARect: public QRect
 {
 public:
-    AnchorsRect(const QRect &rect): QRect(rect.left(), rect.top(), rect.right(), rect.bottom()){}
+    ARect(const QRect &rect): QRect(rect.left(), rect.top(), rect.right(), rect.bottom()){}
+
     const QRect& operator=(const QRect &rect){
         setTopLeft(rect.topLeft());
         setBottomRight(rect.bottomRight());
@@ -90,43 +91,17 @@ public:
         return *this;
     }
 
-    int horizontalCenter(){
-        return left() + width()/2;
-    }
+    inline int horizontalCenter()
+    {return left() + width()/2;}
 
-    void moveHorizontalCenter(int arg){
-        moveLeft(arg - width()/2);
-    }
+    inline void moveHorizontalCenter(int arg)
+    {moveLeft(arg - width()/2);}
 
-    int verticalCenter(){
-        return top() + height()/2;
-    }
+    inline int verticalCenter()
+    {return top() + height()/2;}
 
-    void moveVerticalCenter(int arg){
-        moveTop(arg - height()/2);
-    }
-
-    void setMargins(int arg){
-        if(topMargin == 0)
-            setTop(top() + arg);
-        if(bottomMargin == 0)
-            setBottom(bottom() - arg);
-        if(leftMargin == 0)
-            setLeft(left() + arg);
-        if(rightMargin == 0)
-            setRight(right() - arg);
-    }
-
-    void setTopMargin(int arg){
-
-    }
-
-private:
-    int margins = 0;
-    int topMargin = 0;
-    int bottomMargin = 0;
-    int leftMargin = 0;
-    int rightMargin = 0;
+    inline void moveVerticalCenter(int arg)
+    {moveTop(arg - height()/2);}
 };
 
 class AnchorsBasePrivate;
@@ -136,12 +111,12 @@ class AnchorsBase : public QObject
 
     Q_PROPERTY(QWidget* target READ target WRITE setTarget NOTIFY targetChanged)
     Q_PROPERTY(const AnchorsBase* anchors READ anchors)
-    Q_PROPERTY(const AnchorsInfo* top READ top WRITE setTop NOTIFY topChanged)
-    Q_PROPERTY(const AnchorsInfo* bottom READ bottom WRITE setBottom NOTIFY bottomChanged)
-    Q_PROPERTY(const AnchorsInfo* left READ left WRITE setLeft NOTIFY leftChanged)
-    Q_PROPERTY(const AnchorsInfo* right READ right WRITE setRight NOTIFY rightChanged)
-    Q_PROPERTY(const AnchorsInfo* horizontalCenter READ horizontalCenter WRITE setHorizontalCenter NOTIFY horizontalCenterChanged)
-    Q_PROPERTY(const AnchorsInfo* verticalCenter READ verticalCenter WRITE setVerticalCenter NOTIFY verticalCenterChanged)
+    Q_PROPERTY(const AnchorInfo* top READ top WRITE setTop NOTIFY topChanged)
+    Q_PROPERTY(const AnchorInfo* bottom READ bottom WRITE setBottom NOTIFY bottomChanged)
+    Q_PROPERTY(const AnchorInfo* left READ left WRITE setLeft NOTIFY leftChanged)
+    Q_PROPERTY(const AnchorInfo* right READ right WRITE setRight NOTIFY rightChanged)
+    Q_PROPERTY(const AnchorInfo* horizontalCenter READ horizontalCenter WRITE setHorizontalCenter NOTIFY horizontalCenterChanged)
+    Q_PROPERTY(const AnchorInfo* verticalCenter READ verticalCenter WRITE setVerticalCenter NOTIFY verticalCenterChanged)
     Q_PROPERTY(QWidget* fill READ fill WRITE setFill NOTIFY fillChanged)
     Q_PROPERTY(QWidget* centerIn READ centerIn WRITE setCenterIn NOTIFY centerInChanged)
     Q_PROPERTY(int margins READ margins WRITE setMargins NOTIFY marginsChanged)
@@ -167,12 +142,12 @@ public:
 
     QWidget* target() const;
     const AnchorsBase *anchors() const;
-    const AnchorsInfo *top() const;
-    const AnchorsInfo *bottom() const;
-    const AnchorsInfo *left() const;
-    const AnchorsInfo *right() const;
-    const AnchorsInfo *horizontalCenter() const;
-    const AnchorsInfo *verticalCenter() const;
+    const AnchorInfo *top() const;
+    const AnchorInfo *bottom() const;
+    const AnchorInfo *left() const;
+    const AnchorInfo *right() const;
+    const AnchorInfo *horizontalCenter() const;
+    const AnchorInfo *verticalCenter() const;
     QWidget *fill() const;
     QWidget *centerIn() const;
     int margins() const;
@@ -191,12 +166,12 @@ public:
 public slots:
     void setTarget(QWidget* target);
     bool setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt::AnchorPoint &point);
-    bool setTop(const AnchorsInfo* top);
-    bool setBottom(const AnchorsInfo* bottom);
-    bool setLeft(const AnchorsInfo* left);
-    bool setRight(const AnchorsInfo* right);
-    bool setHorizontalCenter(const AnchorsInfo* horizontalCenter);
-    bool setVerticalCenter(const AnchorsInfo* verticalCenter);
+    bool setTop(const AnchorInfo* top);
+    bool setBottom(const AnchorInfo* bottom);
+    bool setLeft(const AnchorInfo* left);
+    bool setRight(const AnchorInfo* right);
+    bool setHorizontalCenter(const AnchorInfo* horizontalCenter);
+    bool setVerticalCenter(const AnchorInfo* verticalCenter);
     bool setFill(QWidget* fill);
     bool setCenterIn(QWidget* centerIn);
     void setMargins(int margins);
@@ -232,12 +207,12 @@ private slots:
     void updateCenterIn();
 
 signals:
-    void topChanged(const AnchorsInfo* top);
-    void bottomChanged(const AnchorsInfo* bottom);
-    void leftChanged(const AnchorsInfo* left);
-    void rightChanged(const AnchorsInfo* right);
-    void horizontalCenterChanged(const AnchorsInfo* horizontalCenter);
-    void verticalCenterChanged(const AnchorsInfo* verticalCenter);
+    void topChanged(const AnchorInfo* top);
+    void bottomChanged(const AnchorInfo* bottom);
+    void leftChanged(const AnchorInfo* left);
+    void rightChanged(const AnchorInfo* right);
+    void horizontalCenterChanged(const AnchorInfo* horizontalCenter);
+    void verticalCenterChanged(const AnchorInfo* verticalCenter);
     void fillChanged(QWidget* fill);
     void centerInChanged(QWidget* centerIn);
     void marginsChanged(int margins);
