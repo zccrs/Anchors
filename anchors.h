@@ -104,6 +104,13 @@ public:
     inline void moveVerticalCenter(int arg)
     {moveTop(arg - height()/2);}
 
+    inline void setTop(int arg, Qt::AnchorPoint point);
+    inline void setVerticalCenter(int arg, Qt::AnchorPoint point);
+    inline void setBottom(int arg, Qt::AnchorPoint point);
+    inline void setLeft(int arg, Qt::AnchorPoint point);
+    inline void setHorizontalCenter(int arg, Qt::AnchorPoint point);
+    inline void setRight(int arg, Qt::AnchorPoint point);
+    inline int getValue(Qt::AnchorPoint point);
 };
 
 class AnchorsBasePrivate;
@@ -186,10 +193,12 @@ public slots:
     void setVerticalCenterOffset(int verticalCenterOffset);
     void setAlignWhenCentered(bool alignWhenCentered);
 
-    void setTop(int arg);
-    void setBottom(int arg);
-    void setLeft(int arg);
-    void setRight(int arg);
+    void setTop(int arg, Qt::AnchorPoint point);
+    void setBottom(int arg, Qt::AnchorPoint point);
+    void setLeft(int arg, Qt::AnchorPoint point);
+    void setRight(int arg, Qt::AnchorPoint point);
+    void setHorizontalCenter(int arg, Qt::AnchorPoint point);
+    void setVerticalCenter(int arg, Qt::AnchorPoint point);
 
     void moveTop(int arg);
     void moveBottom(int arg);

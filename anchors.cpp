@@ -747,34 +747,50 @@ void AnchorsBase::setAlignWhenCentered(bool alignWhenCentered)
     emit alignWhenCenteredChanged(alignWhenCentered);
 }
 
-void AnchorsBase::setTop(int arg)
+void AnchorsBase::setTop(int arg, Qt::AnchorPoint point)
 {
-    QRect rect = target()->geometry();
-    rect.setTop(arg);
+    ARect rect = target()->geometry();
+    rect.setTop(arg, point);
 
     target()->setGeometry(rect);
 }
 
-void AnchorsBase::setBottom(int arg)
+void AnchorsBase::setBottom(int arg, Qt::AnchorPoint point)
 {
-    QRect rect = target()->geometry();
-    rect.setBottom(arg);
+    ARect rect = target()->geometry();
+    rect.setBottom(arg, point);
 
     target()->setGeometry(rect);
 }
 
-void AnchorsBase::setLeft(int arg)
+void AnchorsBase::setLeft(int arg, Qt::AnchorPoint point)
 {
-    QRect rect = target()->geometry();
-    rect.setLeft(arg);
+    ARect rect = target()->geometry();
+    rect.setLeft(arg, point);
 
     target()->setGeometry(rect);
 }
 
-void AnchorsBase::setRight(int arg)
+void AnchorsBase::setHorizontalCenter(int arg, Qt::AnchorPoint point)
 {
-    QRect rect = target()->geometry();
-    rect.setRight(arg);
+    ARect rect = target()->geometry();
+    rect.setHorizontalCenter(arg, point);
+
+    target()->setGeometry(rect);
+}
+
+void AnchorsBase::setVerticalCenter(int arg, Qt::AnchorPoint point)
+{
+    ARect rect = target()->geometry();
+    rect.setVerticalCenter(arg, point);
+
+    target()->setGeometry(rect);
+}
+
+void AnchorsBase::setRight(int arg, Qt::AnchorPoint point)
+{
+    ARect rect = target()->geometry();
+    rect.setRight(arg, point);
 
     target()->setGeometry(rect);
 }
@@ -835,67 +851,94 @@ void AnchorsBase::moveCenter(const QPoint &arg)
     target()->setGeometry(rect);
 }
 
+#define UPDATE_GEOMETRY(point,Point,point1,point2)\
+    ARect rect = d->getWidgetRect(d->point->targetInfo->base->target());\
+    offset += rect.getValue(d->point->targetInfo->type);\
+    if(isBinding(d->point1)){\
+        set##Point(offset, d->point1->type);\
+    }else if(isBinding(d->point2)){\
+        set##Point(offset, d->point2->type);\
+    }else{\
+        move##Point(offset);\
+    }\
+
 void AnchorsBase::updateTop()
 {
     Q_D(AnchorsBase);
 
-    int offset = d->topMargin == 0 ? d->margins : d->topMargin;
+    int offset = d->topMargin != 0 ? d->margins : d->topMargin;
 
-    ARect rect = d->getWidgetRect(d->top->targetInfo->base->target());
-
-    switch (d->top->targetInfo->type) {
-    case Qt::AnchorVerticalCenter:
-        offset += rect.verticalCenter();
-        break;
-    case Qt::AnchorBottom:
-        offset += rect.bottom();
-        break;
-    default:
-        break;
-    }
-
-    if(isBinding(d->verticalCenter)){
-
-    }else if(isBinding(d->bottom)){
-        setTop(offset);
-    }else{
-        moveTop(offset);
-    }
+    UPDATE_GEOMETRY(top,Top,verticalCenter,bottom)
 }
 
 void AnchorsBase::updateBottom()
 {
+    Q_D(AnchorsBase);
 
+    int offset = d->bottomMargin != 0 ? d->margins : d->bottomMargin;
+
+    UPDATE_GEOMETRY(bottom,Bottom,verticalCenter,top)
 }
 
 void AnchorsBase::updateLeft()
 {
+    Q_D(AnchorsBase);
 
+    int offset = d->leftMargin != 0 ? d->margins : d->leftMargin;
+
+    UPDATE_GEOMETRY(left,Left,horizontalCenter,right)
 }
 
 void AnchorsBase::updateRight()
 {
+    Q_D(AnchorsBase);
 
+    int offset = d->rightMargin != 0 ? d->margins : d->rightMargin;
+
+    UPDATE_GEOMETRY(right,Right,verticalCenter,left)
 }
 
 void AnchorsBase::updateHorizontalCenter()
 {
+    Q_D(AnchorsBase);
 
+    int offset = d->horizontalCenterOffset;
+
+    UPDATE_GEOMETRY(horizontalCenter,HorizontalCenter,left,right)
 }
 
 void AnchorsBase::updateVerticalCenter()
 {
+    Q_D(AnchorsBase);
 
+    int offset = d->verticalCenterOffset;
+
+    UPDATE_GEOMETRY(verticalCenter,VerticalCenter,top,bottom)
 }
 
 void AnchorsBase::updateFill()
 {
+    Q_D(AnchorsBase);
 
+    QRect rect = d->getWidgetRect(d->fill->target());
+    int offset = d->topMargin != 0 ? d->topMargin : d->margins;
+    rect.setTop(rect.top() + offset);
+    offset = d->bottomMargin != 0 ? d->bottomMargin : d->margins;
+    rect.setBottom(rect.bottom() + offset);
+    offset = d->leftMargin != 0 ? d->leftMargin : d->margins;
+    rect.setLeft(rect.left() + offset);
+    offset = d->rightMargin != 0 ? d->rightMargin : d->margins;
+    rect.setRight(rect.right() + offset);
+
+    target()->setGeometry(rect);
 }
 
 void AnchorsBase::updateCenterIn()
 {
+    Q_D(AnchorsBase);
 
+    QRect rect = d->getWidgetRect(d->centerIn->target());
+    moveCenter(rect.center());
 }
 
 AnchorsBase::AnchorsBase(AnchorsBasePrivate *dd, QWidget *w):
@@ -915,4 +958,75 @@ void AnchorsBase::init(QWidget *w)
     connect(d->centerIn, SIGNAL(positionChanged(QPoint)), SLOT(updateCenterIn()));
 
     d->setWidgetAnchorsBase(w, this);
+}
+
+
+void ARect::setTop(int arg, Qt::AnchorPoint point)
+{
+    if(point == Qt::AnchorVerticalCenter){
+        QRect::setBottom(height() - arg);
+    }
+    QRect::setTop(arg);
+}
+
+void ARect::setVerticalCenter(int arg, Qt::AnchorPoint point)
+{
+    if(point == Qt::AnchorTop){
+        QRect::setBottom(2 * arg - top());
+    }else if(point == Qt::AnchorBottom){
+        QRect::setTop(bottom() - 2 * (arg - top()));
+    }
+}
+
+void ARect::setBottom(int arg, Qt::AnchorPoint point)
+{
+    if(point == Qt::AnchorVerticalCenter){
+        QRect::setTop(arg - height());
+    }
+    QRect::setBottom(arg);
+}
+
+void ARect::setLeft(int arg, Qt::AnchorPoint point)
+{
+    if(point == Qt::AnchorHorizontalCenter){
+        QRect::setRight(width() - arg);
+    }
+    QRect::setLeft(arg);
+}
+
+void ARect::setHorizontalCenter(int arg, Qt::AnchorPoint point)
+{
+    if(point == Qt::AnchorLeft){
+        QRect::setRight(2 * arg - left());
+    }else if(point == Qt::AnchorRight){
+        QRect::setLeft(right() - 2 * (arg - left()));
+    }
+}
+
+void ARect::setRight(int arg, Qt::AnchorPoint point)
+{
+    if(point == Qt::AnchorHorizontalCenter){
+        QRect::setLeft(arg - width());
+    }
+    QRect::setRight(arg);
+}
+
+int ARect::getValue(Qt::AnchorPoint point)
+{
+    switch (point) {
+    case Qt::AnchorTop:
+        return top();
+    case Qt::AnchorLeft:
+        return left();
+    case Qt::AnchorRight:
+        return right();
+    case Qt::AnchorBottom:
+        return bottom();
+    case Qt::AnchorHorizontalCenter:
+        return horizontalCenter();
+    case Qt::AnchorVerticalCenter:
+        return verticalCenter();
+    default:
+        return 0;
+    }
 }
