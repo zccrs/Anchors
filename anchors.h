@@ -82,6 +82,7 @@ struct AnchorInfo
 class ARect: public QRect
 {
 public:
+    ARect(){}
     ARect(const QRect &rect): QRect(rect.left(), rect.top(), rect.right(), rect.bottom()){}
 
     const QRect& operator=(const QRect &rect){
@@ -102,6 +103,7 @@ public:
 
     inline void moveVerticalCenter(int arg)
     {moveTop(arg - height()/2);}
+
 };
 
 class AnchorsBasePrivate;
@@ -160,6 +162,7 @@ public:
     int alignWhenCentered() const;
     AnchorError errorCode() const;
     QString errorString() const;
+    bool isBinding(const AnchorInfo *info) const;
 
     static bool setAnchor(QWidget *w, const Qt::AnchorPoint &p, QWidget *target, const Qt::AnchorPoint &point);
 
@@ -233,6 +236,9 @@ protected:
     AnchorsBasePrivate *d_ptr;
 
     Q_DECLARE_PRIVATE(AnchorsBase)
+
+private:
+    void init(QWidget *w);
 };
 
 template<class T>
@@ -243,18 +249,20 @@ public:
     inline Anchors(T *w): AnchorsBase(w), m_widget(w){}
     inline Anchors(const Anchors &me): AnchorsBase(me.m_widget), m_widget(me.m_widget){}
 
-    inline T &operator=(const Anchors &me)
+    inline T & operator=(const Anchors &me)
     { m_widget = me.m_widget, setTarget(m_widget); return *m_widget; }
-    inline T &operator=(T* w)
+    inline T & operator=(T* w)
     { m_widget = w; setTarget(w); return *m_widget; }
     inline T* widget() const
     {return m_widget;}
-    inline T* operator->() const
-    { return widget(); }
-    inline T& operator*() const
-    { return *widget(); }
+    inline T* operator ->() const
+    { return m_widget; }
+    inline T& operator *() const
+    { return *m_widget; }
     inline operator T*() const
-    { return widget(); }
+    { return m_widget; }
+    inline operator T&() const
+    { return *m_widget; }
 
 private:
     T *m_widget;

@@ -8,12 +8,12 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    Anchors<MainWindow> w;
-    w->show();
+    Anchors<MainWindow> *w = new Anchors<MainWindow>;
 
-    w.setTop(w.top());
+    (*w)->show();
+    //w.setTop(wtop());
 
-    qDebug()<<w.errorCode()<<w.errorString();
+    //qDebug()<<w.errorCode()<<w.errorString();
 
     return a.exec();
 }
