@@ -4,7 +4,7 @@
 
 class ExtendWidgetPrivate
 {
-    explicit ExtendWidgetPrivate(ExtendWidget *qq): q_ptr(qq){}
+    explicit ExtendWidgetPrivate(ExtendWidget *qq): q_ptr(qq) {}
 
     QSize old_size;
     QPoint old_pos;
@@ -19,7 +19,7 @@ ExtendWidget::ExtendWidget(QWidget *w, QObject *parent):
     QObject(parent),
     d_ptr(new ExtendWidgetPrivate(this))
 {
-    if(w){
+    if (w) {
         Q_D(ExtendWidget);
 
         d->target = w;
@@ -43,11 +43,13 @@ void ExtendWidget::setTarget(QWidget *target)
 {
     Q_D(ExtendWidget);
 
-    if (d->target == target)
+    if (d->target == target) {
         return;
+    }
 
-    if(d->target)
+    if (d->target) {
         d->target->removeEventFilter(this);
+    }
     target->installEventFilter(this);
     d->target = target;
     emit targetChanged(target);
@@ -57,37 +59,43 @@ bool ExtendWidget::eventFilter(QObject *o, QEvent *e)
 {
     Q_D(ExtendWidget);
 
-    if( o == d->target ){
-        if(e->type() == QEvent::Resize){
-            QResizeEvent *event = static_cast<QResizeEvent*>(e);
-            if(event){
+    if (o == d->target) {
+        if (e->type() == QEvent::Resize) {
+            QResizeEvent *event = static_cast<QResizeEvent *>(e);
+            if (event) {
                 QSize size = event->size();
 
-                if(size.width() != d->old_size.width())
+                if (size.width() != d->old_size.width()) {
                     emit widthChanged(size.width());
+                }
 
-                if(size.height() != d->old_size.height())
+                if (size.height() != d->old_size.height()) {
                     emit heightChanged(size.height());
+                }
 
-                if(size != d->old_size)
+                if (size != d->old_size) {
                     emit sizeChanged(size);
+                }
 
                 d->old_size = size;
             }
-        }else if(e->type() == QEvent::Move){
-            QMoveEvent *event = static_cast<QMoveEvent*>(e);
+        } else if (e->type() == QEvent::Move) {
+            QMoveEvent *event = static_cast<QMoveEvent *>(e);
 
-            if(event){
+            if (event) {
                 QPoint pos = event->pos();
 
-                if(pos.x() != d->old_pos.x())
+                if (pos.x() != d->old_pos.x()) {
                     emit xChanged(pos.x());
+                }
 
-                if(pos.y() != d->old_pos.y())
+                if (pos.y() != d->old_pos.y()) {
                     emit yChanged(pos.y());
+                }
 
-                if(pos != d->old_pos)
+                if (pos != d->old_pos) {
                     emit positionChanged(pos);
+                }
 
                 d->old_pos = pos;
             }
@@ -101,14 +109,16 @@ ExtendWidget::ExtendWidget(ExtendWidgetPrivate *dd, QWidget *w, QObject *parent)
     QObject(parent),
     d_ptr(dd)
 {
-    if(w)
+    if (w) {
         w->installEventFilter(this);
+    }
 }
 
 class AnchorsBasePrivate
 {
-    AnchorsBasePrivate(AnchorsBase *qq): q_ptr(qq){}
-    ~AnchorsBasePrivate(){
+    AnchorsBasePrivate(AnchorsBase *qq): q_ptr(qq) {}
+    ~AnchorsBasePrivate()
+    {
         delete top;
         delete bottom;
         delete left;
@@ -117,33 +127,39 @@ class AnchorsBasePrivate
         delete verticalCenter;
     }
 
-    static void setWidgetAnchorsBase(const QWidget* w, AnchorsBase* b){
-        if(w){
+    static void setWidgetAnchorsBase(const QWidget *w, AnchorsBase *b)
+    {
+        if (w) {
             AnchorsBase *bb = widgetMap.value(w, NULL);
-            if(bb)
+            if (bb) {
                 bb->deleteLater();
+            }
             widgetMap[w] = b;
         }
     }
-    static AnchorsBase *getWidgetAnchorsBase(QWidget* w){
-        if(!w)
+    static AnchorsBase *getWidgetAnchorsBase(QWidget *w)
+    {
+        if (!w) {
             return NULL;
+        }
 
         AnchorsBase *bb = widgetMap.value(w, NULL);
-        if(!bb){
+        if (!bb) {
             bb = new AnchorsBase(w);
             widgetMap[w] = bb;
         }
 
         return bb;
     }
-    static void removeWidgetAnchorsBase(const QWidget* w, const AnchorsBase *b){
-        if(w && b && widgetMap.value(w, NULL) == b){
+    static void removeWidgetAnchorsBase(const QWidget *w, const AnchorsBase *b)
+    {
+        if (w && b && widgetMap.value(w, NULL) == b) {
             widgetMap.remove(w);
         }
     }
 
-    const AnchorInfo* getInfoByPoint(const Qt::AnchorPoint &p) const{
+    const AnchorInfo *getInfoByPoint(const Qt::AnchorPoint &p) const
+    {
         switch (p) {
         case Qt::AnchorTop:
             return top;
@@ -162,31 +178,34 @@ class AnchorsBasePrivate
         }
     }
 
-    bool checkInfo(const AnchorInfo* info1, const AnchorInfo *info2) const{
+    bool checkInfo(const AnchorInfo *info1, const AnchorInfo *info2) const
+    {
         const Qt::AnchorPoint &p = info2->type;
 
         switch (info1->type) {
         case Qt::AnchorTop://Deliberate
         case Qt::AnchorBottom://Deliberate
-        case Qt::AnchorHorizontalCenter:
+        case Qt::AnchorVerticalCenter:
             return (p == Qt::AnchorTop || p == Qt::AnchorBottom || p == Qt::AnchorVerticalCenter);
         case Qt::AnchorLeft://Deliberate
         case Qt::AnchorRight://Deliberate
-        case Qt::AnchorVerticalCenter:
+        case Qt::AnchorHorizontalCenter:
             return (p == Qt::AnchorLeft || p == Qt::AnchorRight || p == Qt::AnchorHorizontalCenter);
         default:
             return false;
         }
     }
 
-    bool isBindable(const AnchorInfo *info) const{
+    bool isBindable(const AnchorInfo *info) const
+    {
         Q_Q(const AnchorsBase);
 
-        if(fill->target() || centerIn->target())
+        if (fill->target() || centerIn->target()) {
             return false;
+        }
 
-        bool tmp1 = ((int)q->isBinding(top)+(int)q->isBinding(verticalCenter)+(int)q->isBinding(bottom)) < 2;
-        bool tmp2 = ((int)q->isBinding(left)+(int)q->isBinding(horizontalCenter)+(int)q->isBinding(right)) < 2;
+        bool tmp1 = ((int)q->isBinding(top) + (int)q->isBinding(verticalCenter) + (int)q->isBinding(bottom)) < 2;
+        bool tmp2 = ((int)q->isBinding(left) + (int)q->isBinding(horizontalCenter) + (int)q->isBinding(right)) < 2;
 
         switch (info->type) {
         case Qt::AnchorTop://Deliberate
@@ -202,7 +221,8 @@ class AnchorsBasePrivate
         }
     }
 
-    int getValueByInfo(const AnchorInfo *info){
+    int getValueByInfo(const AnchorInfo *info)
+    {
         ARect rect = info->base->target()->geometry();
 
         switch (info->type) {
@@ -223,12 +243,15 @@ class AnchorsBasePrivate
         }
     }
 
-    const ARect getWidgetRect(const QWidget *w) const{
-        if(!w)
+    const ARect getWidgetRect(const QWidget *w) const
+    {
+        if (!w) {
             return ARect();
+        }
 
-        if(extendWidget && extendWidget->target()->parentWidget() == w)
+        if (extendWidget && extendWidget->target()->parentWidget() == w) {
             return w->rect();
+        }
 
         return w->geometry();
     }
@@ -236,14 +259,14 @@ class AnchorsBasePrivate
     AnchorsBase *q_ptr;
 
     ExtendWidget *extendWidget = NULL;
-    AnchorInfo* top = new AnchorInfo(q_ptr, Qt::AnchorTop);
-    AnchorInfo* bottom = new AnchorInfo(q_ptr, Qt::AnchorBottom);
-    AnchorInfo* left = new AnchorInfo(q_ptr, Qt::AnchorLeft);
-    AnchorInfo* right = new AnchorInfo(q_ptr, Qt::AnchorRight);
-    AnchorInfo* horizontalCenter = new AnchorInfo(q_ptr, Qt::AnchorHorizontalCenter);
-    AnchorInfo* verticalCenter = new AnchorInfo(q_ptr, Qt::AnchorVerticalCenter);
-    ExtendWidget* fill = new ExtendWidget(NULL, q_ptr);
-    ExtendWidget* centerIn = new ExtendWidget(NULL, q_ptr);
+    AnchorInfo *top = new AnchorInfo(q_ptr, Qt::AnchorTop);
+    AnchorInfo *bottom = new AnchorInfo(q_ptr, Qt::AnchorBottom);
+    AnchorInfo *left = new AnchorInfo(q_ptr, Qt::AnchorLeft);
+    AnchorInfo *right = new AnchorInfo(q_ptr, Qt::AnchorRight);
+    AnchorInfo *horizontalCenter = new AnchorInfo(q_ptr, Qt::AnchorHorizontalCenter);
+    AnchorInfo *verticalCenter = new AnchorInfo(q_ptr, Qt::AnchorVerticalCenter);
+    ExtendWidget *fill = new ExtendWidget(NULL, q_ptr);
+    ExtendWidget *centerIn = new ExtendWidget(NULL, q_ptr);
     int margins = 0;
     int topMargin = 0;
     int bottomMargin = 0;
@@ -256,12 +279,12 @@ class AnchorsBasePrivate
     QPoint widget_old_pos;
     AnchorsBase::AnchorError errorCode = AnchorsBase::NoError;
     QString errorString;
-    static QMap<const QWidget*, AnchorsBase*> widgetMap;
+    static QMap<const QWidget *, AnchorsBase *> widgetMap;
 
     Q_DECLARE_PUBLIC(AnchorsBase)
 };
 
-QMap<const QWidget*, AnchorsBase*> AnchorsBasePrivate::widgetMap;
+QMap<const QWidget *, AnchorsBase *> AnchorsBasePrivate::widgetMap;
 
 AnchorsBase::AnchorsBase(QWidget *w):
     QObject(w),
@@ -337,8 +360,9 @@ QWidget *AnchorsBase::fill() const
 {
     Q_D(const AnchorsBase);
 
-    if(d->fill)
+    if (d->fill) {
         return d->fill->target();
+    }
 
     return NULL;
 }
@@ -347,8 +371,9 @@ QWidget *AnchorsBase::centerIn() const
 {
     Q_D(const AnchorsBase);
 
-    if(d->centerIn)
+    if (d->centerIn) {
         return d->centerIn->target();
+    }
 
     return NULL;
 }
@@ -445,7 +470,7 @@ void AnchorsBase::setTarget(QWidget *target)
 bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt::AnchorPoint &point)
 {
     AnchorsBase *base = AnchorsBasePrivate::getWidgetAnchorsBase(target);
-    const AnchorInfo* info = base->d_func()->getInfoByPoint(point);
+    const AnchorInfo *info = base->d_func()->getInfoByPoint(point);
 
     switch (p) {
     case Qt::AnchorTop:
@@ -496,11 +521,13 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
             if(!isBrother){\
                 d->errorCode = TargetInvalid;\
                 d->errorString = tr("Cannot anchor to an widget that isn't a parent or sibling.");\
+                return false;\
             }\
         }\
         if(!d->checkInfo(d->point, point)){\
             d->errorCode = PointInvalid;\
             d->errorString = tr("Cannot anchor a vertical/horizontal edge to a horizontal/vertical edge.");\
+            return false;\
         }\
         int old_pos = d->getValueByInfo(point);\
         AnchorInfo old_info = *d->point;\
@@ -517,15 +544,18 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
         if(tmp_w1 != tmp_w2){\
             foreach(const QString &str, signalList){\
                 QByteArray arr = str.toLatin1();\
+                if(arr.right(1) != ")") arr += ")";\
                 if(tmp_w1)\
-                    disconnect(tmp_w1, QByteArray("2"+arr+")").data(), this, SLOT(update##Point()));\
-                connect(tmp_w2, QByteArray("2"+arr+")").data(), this, SLOT(update##Point()));\
+                    disconnect(tmp_w1, QByteArray("2"+arr).data(), this, SLOT(update##Point()));\
+                if(arr.size() != 13 || target()->parentWidget() != point->base->target())\
+                    connect(tmp_w2, QByteArray("2"+arr).data(), this, SLOT(update##Point()), Qt::DirectConnection);\
             }\
         }\
     }else{\
-    foreach(const QString &str, signalList){\
-        QByteArray arr = str.toLatin1();\
-            disconnect(tmp_w1, QByteArray("2"+arr+")").data(), this, SLOT(update##Point()));\
+        foreach(const QString &str, signalList){\
+            QByteArray arr = str.toLatin1();\
+            if(arr.right(1) != ")") arr += ")";\
+            disconnect(tmp_w1, QByteArray("2"+arr).data(), this, SLOT(update##Point()));\
         }\
         *d->point = point;\
         return true;\
@@ -552,6 +582,7 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
             if(!isBrother){\
                 d->errorCode = TargetInvalid;\
                 d->errorString = tr("Cannot anchor to an widget that isn't a parent or sibling.");\
+                return false;\
             }\
         }\
         QRect old_rect = point->geometry();\
@@ -569,80 +600,90 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
         setTop(info);setLeft(info);setRight(info);setBottom(info);setHorizontalCenter(info);setVerticalCenter(info);\
         if(d->point == d->fill)\
             setCenterIn(NULL);\
+        if(target()->parentWidget() != point)\
+            disconnect(d->point, SIGNAL(positionChanged(QPoint)), this, SLOT(update##Point()));\
+        else connect(d->point, SIGNAL(positionChanged(QPoint)), SLOT(update##Point()), Qt::DirectConnection);\
     }\
     d->point->setTarget(point);\
     emit point##Changed(point);\
     return true;\
 
-bool AnchorsBase::setTop(const AnchorInfo* top)
+bool AnchorsBase::setTop(const AnchorInfo *top)
 {
-    ANCHOR_BIND_INFO(top,Top,yChanged(int))
+    ANCHOR_BIND_INFO(top, Top, yChanged(int))
 }
 
-bool AnchorsBase::setBottom(const AnchorInfo* bottom)
+bool AnchorsBase::setBottom(const AnchorInfo *bottom)
 {
-    ANCHOR_BIND_INFO(bottom,Bottom,yChanged(int),heightChanged(int))
+    ANCHOR_BIND_INFO(bottom, Bottom, yChanged(int), heightChanged(int))
 }
 
-bool AnchorsBase::setLeft(const AnchorInfo* left)
+bool AnchorsBase::setLeft(const AnchorInfo *left)
 {
-    ANCHOR_BIND_INFO(left,Left,xChanged(int))
+    ANCHOR_BIND_INFO(left, Left, xChanged(int))
 }
 
-bool AnchorsBase::setRight(const AnchorInfo* right)
+bool AnchorsBase::setRight(const AnchorInfo *right)
 {
-    ANCHOR_BIND_INFO(right,Right,xChanged(int),widthChanged(int))
+    ANCHOR_BIND_INFO(right, Right, xChanged(int), widthChanged(int))
 }
 
-bool AnchorsBase::setHorizontalCenter(const AnchorInfo* horizontalCenter)
+bool AnchorsBase::setHorizontalCenter(const AnchorInfo *horizontalCenter)
 {
-    ANCHOR_BIND_INFO(horizontalCenter,HorizontalCenter,xChanged(int),widthChanged(int))
+    ANCHOR_BIND_INFO(horizontalCenter, HorizontalCenter, xChanged(int), widthChanged(int))
 }
 
-bool AnchorsBase::setVerticalCenter(const AnchorInfo* verticalCenter)
+bool AnchorsBase::setVerticalCenter(const AnchorInfo *verticalCenter)
 {
-    ANCHOR_BIND_INFO(verticalCenter,VerticalCenter,yChanged(int),heightChanged(int))
+    ANCHOR_BIND_INFO(verticalCenter, VerticalCenter, yChanged(int), heightChanged(int))
 }
 
-bool AnchorsBase::setFill(QWidget* fill)
+bool AnchorsBase::setFill(QWidget *fill)
 {
     Q_D(AnchorsBase);
 
-    ANCHOR_BIND_WIDGET(fill,Fill)
+    ANCHOR_BIND_WIDGET(fill, Fill)
 }
 
-bool AnchorsBase::setCenterIn(QWidget* centerIn)
+bool AnchorsBase::setCenterIn(QWidget *centerIn)
 {
     Q_D(AnchorsBase);
 
-    if(d->fill->target()){
+    if (d->fill->target()) {
         d->errorCode = Conflict;
         d->errorString = tr("Conflict: Fill is anchored.");
         return false;
     }
 
-    ANCHOR_BIND_WIDGET(centerIn,CenterIn)
+    ANCHOR_BIND_WIDGET(centerIn, CenterIn)
 }
 
 void AnchorsBase::setMargins(int margins)
 {
     Q_D(AnchorsBase);
 
-    if (d->margins == margins)
+    if (d->margins == margins) {
         return;
+    }
 
     d->margins = margins;
 
-    if(margins !=0 ){
-        if(d->topMargin == 0)
+    if (margins != 0) {
+        if (d->topMargin == 0 && isBinding(d->top)) {
             updateTop();
-        if(d->bottomMargin == 0)
+        }
+        if (d->bottomMargin == 0 && isBinding(d->bottom)) {
             updateBottom();
-        if(d->leftMargin == 0)
+        }
+        if (d->leftMargin == 0 && isBinding(d->left)) {
             updateLeft();
-        if(d->rightMargin == 0)
+        }
+        if (d->rightMargin == 0 && isBinding(d->right)) {
             updateRight();
-        updateFill();
+        }
+        if (d->fill->target()) {
+            updateFill();
+        }
     }
 
     emit marginsChanged(margins);
@@ -652,13 +693,18 @@ void AnchorsBase::setTopMargin(int topMargin)
 {
     Q_D(AnchorsBase);
 
-    if (d->topMargin == topMargin)
+    if (d->topMargin == topMargin) {
         return;
+    }
 
     d->topMargin = topMargin;
 
-    updateTop();
-    updateFill();
+    if (isBinding(d->top)) {
+        updateTop();
+    }
+    if (d->fill->target()) {
+        updateFill();
+    }
 
     emit topMarginChanged(topMargin);
 }
@@ -667,13 +713,18 @@ void AnchorsBase::setBottomMargin(int bottomMargin)
 {
     Q_D(AnchorsBase);
 
-    if (d->bottomMargin == bottomMargin)
+    if (d->bottomMargin == bottomMargin) {
         return;
+    }
 
     d->bottomMargin = bottomMargin;
 
-    updateBottom();
-    updateFill();
+    if (isBinding(d->bottom)) {
+        updateBottom();
+    }
+    if (d->fill->target()) {
+        updateFill();
+    }
 
     emit bottomMarginChanged(bottomMargin);
 }
@@ -682,13 +733,18 @@ void AnchorsBase::setLeftMargin(int leftMargin)
 {
     Q_D(AnchorsBase);
 
-    if (d->leftMargin == leftMargin)
+    if (d->leftMargin == leftMargin) {
         return;
+    }
 
     d->leftMargin = leftMargin;
 
-    updateLeft();
-    updateFill();
+    if (isBinding(d->left)) {
+        updateLeft();
+    }
+    if (d->fill->target()) {
+        updateFill();
+    }
 
     emit leftMarginChanged(leftMargin);
 }
@@ -697,13 +753,18 @@ void AnchorsBase::setRightMargin(int rightMargin)
 {
     Q_D(AnchorsBase);
 
-    if (d->rightMargin == rightMargin)
+    if (d->rightMargin == rightMargin) {
         return;
+    }
 
     d->rightMargin = rightMargin;
 
-    updateRight();
-    updateFill();
+    if (isBinding(d->right)) {
+        updateRight();
+    }
+    if (d->fill->target()) {
+        updateFill();
+    }
 
     emit rightMarginChanged(rightMargin);
 }
@@ -712,12 +773,15 @@ void AnchorsBase::setHorizontalCenterOffset(int horizontalCenterOffset)
 {
     Q_D(AnchorsBase);
 
-    if (d->horizontalCenterOffset == horizontalCenterOffset)
+    if (d->horizontalCenterOffset == horizontalCenterOffset) {
         return;
+    }
 
     d->horizontalCenterOffset = horizontalCenterOffset;
 
-    updateHorizontalCenter();
+    if (isBinding(d->horizontalCenter)) {
+        updateHorizontalCenter();
+    }
 
     emit horizontalCenterOffsetChanged(horizontalCenterOffset);
 }
@@ -726,12 +790,15 @@ void AnchorsBase::setVerticalCenterOffset(int verticalCenterOffset)
 {
     Q_D(AnchorsBase);
 
-    if (d->verticalCenterOffset == verticalCenterOffset)
+    if (d->verticalCenterOffset == verticalCenterOffset) {
         return;
+    }
 
     d->verticalCenterOffset = verticalCenterOffset;
 
-    updateVerticalCenter();
+    if (isBinding(d->verticalCenter)) {
+        updateVerticalCenter();
+    }
 
     emit verticalCenterOffsetChanged(verticalCenterOffset);
 }
@@ -740,115 +807,90 @@ void AnchorsBase::setAlignWhenCentered(bool alignWhenCentered)
 {
     Q_D(AnchorsBase);
 
-    if (d->alignWhenCentered == alignWhenCentered)
+    if (d->alignWhenCentered == alignWhenCentered) {
         return;
+    }
 
     d->alignWhenCentered = alignWhenCentered;
     emit alignWhenCenteredChanged(alignWhenCentered);
 }
 
+#define SET_POS(fun)\
+    ARect rect = target()->geometry();\
+    qDebug()<<"set"<<#fun<<arg<<rect;\
+    rect.set##fun(arg, point);\
+    target()->setFixedSize(rect.size());\
+    target()->move(rect.topLeft());\
+
+#define MOVE_POS(fun)\
+    ARect rect = target()->geometry();\
+    qDebug()<<"move"<<#fun<<arg<<rect;\
+    rect.move##fun(arg);\
+    target()->setGeometry(rect);\
+
 void AnchorsBase::setTop(int arg, Qt::AnchorPoint point)
 {
-    ARect rect = target()->geometry();
-    rect.setTop(arg, point);
-
-    target()->setGeometry(rect);
+    SET_POS(Top)
 }
 
 void AnchorsBase::setBottom(int arg, Qt::AnchorPoint point)
 {
-    ARect rect = target()->geometry();
-    rect.setBottom(arg, point);
-
-    target()->setGeometry(rect);
+    SET_POS(Bottom)
 }
 
 void AnchorsBase::setLeft(int arg, Qt::AnchorPoint point)
 {
-    ARect rect = target()->geometry();
-    rect.setLeft(arg, point);
-
-    target()->setGeometry(rect);
+    SET_POS(Left)
 }
 
 void AnchorsBase::setHorizontalCenter(int arg, Qt::AnchorPoint point)
 {
-    ARect rect = target()->geometry();
-    rect.setHorizontalCenter(arg, point);
-
-    target()->setGeometry(rect);
+    SET_POS(HorizontalCenter)
 }
 
 void AnchorsBase::setVerticalCenter(int arg, Qt::AnchorPoint point)
 {
-    ARect rect = target()->geometry();
-    rect.setVerticalCenter(arg, point);
-
-    target()->setGeometry(rect);
+    SET_POS(VerticalCenter)
 }
 
 void AnchorsBase::setRight(int arg, Qt::AnchorPoint point)
 {
-    ARect rect = target()->geometry();
-    rect.setRight(arg, point);
-
-    target()->setGeometry(rect);
+    SET_POS(Right)
 }
 
 void AnchorsBase::moveTop(int arg)
 {
-    QRect rect = target()->geometry();
-    rect.moveTop(arg);
-
-    target()->setGeometry(rect);
+    MOVE_POS(Top)
 }
 
 void AnchorsBase::moveBottom(int arg)
 {
-    QRect rect = target()->geometry();
-    rect.moveBottom(arg);
-
-    target()->setGeometry(rect);
+    MOVE_POS(Bottom)
 }
 
 void AnchorsBase::moveLeft(int arg)
 {
-    QRect rect = target()->geometry();
-    rect.moveLeft(arg);
-
-    target()->setGeometry(rect);
+    MOVE_POS(Left)
 }
 
 void AnchorsBase::moveRight(int arg)
 {
-    QRect rect = target()->geometry();
-    rect.moveRight(arg);
-
-    target()->setGeometry(rect);
+    MOVE_POS(Right)
 }
 
 void AnchorsBase::moveHorizontalCenter(int arg)
 {
-    ARect rect = target()->geometry();
-    rect.moveHorizontalCenter(arg);
-
-    target()->setGeometry(rect);
+    MOVE_POS(HorizontalCenter)
 }
 
 void AnchorsBase::moveVerticalCenter(int arg)
 {
-    ARect rect = target()->geometry();
-    rect.moveVerticalCenter(arg);
-
-    target()->setGeometry(rect);
+    MOVE_POS(VerticalCenter)
 }
 
 void AnchorsBase::moveCenter(const QPoint &arg)
 {
-    QRect rect = target()->geometry();
-    rect.moveCenter(arg);
-
-    target()->setGeometry(rect);
+    MOVE_POS(Center)
 }
 
 #define UPDATE_GEOMETRY(point,Point,point1,point2)\
@@ -866,36 +908,36 @@ void AnchorsBase::updateTop()
 {
     Q_D(AnchorsBase);
 
-    int offset = d->topMargin != 0 ? d->margins : d->topMargin;
+    int offset = d->topMargin == 0 ? d->margins : d->topMargin;
 
-    UPDATE_GEOMETRY(top,Top,verticalCenter,bottom)
+    UPDATE_GEOMETRY(top, Top, verticalCenter, bottom)
 }
 
 void AnchorsBase::updateBottom()
 {
     Q_D(AnchorsBase);
 
-    int offset = d->bottomMargin != 0 ? d->margins : d->bottomMargin;
+    int offset = -(d->bottomMargin == 0 ? d->margins : d->bottomMargin);
 
-    UPDATE_GEOMETRY(bottom,Bottom,verticalCenter,top)
+    UPDATE_GEOMETRY(bottom, Bottom, verticalCenter, top)
 }
 
 void AnchorsBase::updateLeft()
 {
     Q_D(AnchorsBase);
 
-    int offset = d->leftMargin != 0 ? d->margins : d->leftMargin;
+    int offset = d->leftMargin == 0 ? d->margins : d->leftMargin;
 
-    UPDATE_GEOMETRY(left,Left,horizontalCenter,right)
+    UPDATE_GEOMETRY(left, Left, horizontalCenter, right)
 }
 
 void AnchorsBase::updateRight()
 {
     Q_D(AnchorsBase);
 
-    int offset = d->rightMargin != 0 ? d->margins : d->rightMargin;
+    int offset = -(d->rightMargin == 0 ? d->margins : d->rightMargin);
 
-    UPDATE_GEOMETRY(right,Right,verticalCenter,left)
+    UPDATE_GEOMETRY(right, Right, verticalCenter, left)
 }
 
 void AnchorsBase::updateHorizontalCenter()
@@ -904,7 +946,7 @@ void AnchorsBase::updateHorizontalCenter()
 
     int offset = d->horizontalCenterOffset;
 
-    UPDATE_GEOMETRY(horizontalCenter,HorizontalCenter,left,right)
+    UPDATE_GEOMETRY(horizontalCenter, HorizontalCenter, left, right)
 }
 
 void AnchorsBase::updateVerticalCenter()
@@ -913,7 +955,7 @@ void AnchorsBase::updateVerticalCenter()
 
     int offset = d->verticalCenterOffset;
 
-    UPDATE_GEOMETRY(verticalCenter,VerticalCenter,top,bottom)
+    UPDATE_GEOMETRY(verticalCenter, VerticalCenter, top, bottom)
 }
 
 void AnchorsBase::updateFill()
@@ -924,11 +966,11 @@ void AnchorsBase::updateFill()
     int offset = d->topMargin != 0 ? d->topMargin : d->margins;
     rect.setTop(rect.top() + offset);
     offset = d->bottomMargin != 0 ? d->bottomMargin : d->margins;
-    rect.setBottom(rect.bottom() + offset);
+    rect.setBottom(rect.bottom() - offset);
     offset = d->leftMargin != 0 ? d->leftMargin : d->margins;
     rect.setLeft(rect.left() + offset);
     offset = d->rightMargin != 0 ? d->rightMargin : d->margins;
-    rect.setRight(rect.right() + offset);
+    rect.setRight(rect.right() - offset);
 
     target()->setGeometry(rect);
 }
@@ -952,10 +994,9 @@ void AnchorsBase::init(QWidget *w)
     Q_D(AnchorsBase);
 
     d->extendWidget = new ExtendWidget(w, this);
-    connect(d->extendWidget, SIGNAL(targetChanged(QWidget*)), SIGNAL(targetChanged(QWidget*)));
-    connect(d->fill, SIGNAL(positionChanged(QPoint)), SLOT(updateFill()));
-    connect(d->fill, SIGNAL(sizeChanged(QSize)), SLOT(updateFill()));
-    connect(d->centerIn, SIGNAL(positionChanged(QPoint)), SLOT(updateCenterIn()));
+    connect(d->extendWidget, SIGNAL(targetChanged(QWidget *)), SIGNAL(targetChanged(QWidget *)), Qt::DirectConnection);
+    connect(d->fill, SIGNAL(sizeChanged(QSize)), SLOT(updateFill()), Qt::DirectConnection);
+    connect(d->centerIn, SIGNAL(sizeChanged(QSize)), SLOT(updateCenterIn()), Qt::DirectConnection);
 
     d->setWidgetAnchorsBase(w, this);
 }
@@ -963,7 +1004,7 @@ void AnchorsBase::init(QWidget *w)
 
 void ARect::setTop(int arg, Qt::AnchorPoint point)
 {
-    if(point == Qt::AnchorVerticalCenter){
+    if (point == Qt::AnchorVerticalCenter) {
         QRect::setBottom(height() - arg);
     }
     QRect::setTop(arg);
@@ -971,16 +1012,16 @@ void ARect::setTop(int arg, Qt::AnchorPoint point)
 
 void ARect::setVerticalCenter(int arg, Qt::AnchorPoint point)
 {
-    if(point == Qt::AnchorTop){
-        QRect::setBottom(2 * arg - top());
-    }else if(point == Qt::AnchorBottom){
-        QRect::setTop(bottom() - 2 * (arg - top()));
+    if (point == Qt::AnchorTop) {
+        QRect::setBottom(2 * arg - top() - 1);
+    } else if (point == Qt::AnchorBottom) {
+        QRect::setTop(2 * arg - bottom() - 1);
     }
 }
 
 void ARect::setBottom(int arg, Qt::AnchorPoint point)
 {
-    if(point == Qt::AnchorVerticalCenter){
+    if (point == Qt::AnchorVerticalCenter) {
         QRect::setTop(arg - height());
     }
     QRect::setBottom(arg);
@@ -988,7 +1029,7 @@ void ARect::setBottom(int arg, Qt::AnchorPoint point)
 
 void ARect::setLeft(int arg, Qt::AnchorPoint point)
 {
-    if(point == Qt::AnchorHorizontalCenter){
+    if (point == Qt::AnchorHorizontalCenter) {
         QRect::setRight(width() - arg);
     }
     QRect::setLeft(arg);
@@ -996,16 +1037,16 @@ void ARect::setLeft(int arg, Qt::AnchorPoint point)
 
 void ARect::setHorizontalCenter(int arg, Qt::AnchorPoint point)
 {
-    if(point == Qt::AnchorLeft){
-        QRect::setRight(2 * arg - left());
-    }else if(point == Qt::AnchorRight){
-        QRect::setLeft(right() - 2 * (arg - left()));
+    if (point == Qt::AnchorLeft) {
+        QRect::setRight(2 * arg - left() - 1);
+    } else if (point == Qt::AnchorRight) {
+        QRect::setLeft(2 * arg - right() - 1);
     }
 }
 
 void ARect::setRight(int arg, Qt::AnchorPoint point)
 {
-    if(point == Qt::AnchorHorizontalCenter){
+    if (point == Qt::AnchorHorizontalCenter) {
         QRect::setLeft(arg - width());
     }
     QRect::setRight(arg);
