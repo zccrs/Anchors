@@ -97,33 +97,32 @@ public:
         return *this;
     }
 
-    inline int horizontalCenter()
+    inline qreal horizontalCenter()
     {
-        return left() + width() / 2;
+        return left() + width() / 2.0;
     }
 
     inline void moveHorizontalCenter(int arg)
     {
-        moveLeft(arg - width() / 2);
+        moveLeft(arg - width() / 2.0);
     }
 
-    inline int verticalCenter()
+    inline qreal verticalCenter()
     {
-        return top() + height() / 2;
+        return top() + height() / 2.0;
     }
 
     inline void moveVerticalCenter(int arg)
     {
-        moveTop(arg - height() / 2);
+        moveTop(arg - height() / 2.0);
     }
 
     inline void setTop(int arg, Qt::AnchorPoint point);
-    inline void setVerticalCenter(int arg, Qt::AnchorPoint point);
+    inline void setVerticalCenter(qreal arg, Qt::AnchorPoint point);
     inline void setBottom(int arg, Qt::AnchorPoint point);
     inline void setLeft(int arg, Qt::AnchorPoint point);
-    inline void setHorizontalCenter(int arg, Qt::AnchorPoint point);
+    inline void setHorizontalCenter(qreal arg, Qt::AnchorPoint point);
     inline void setRight(int arg, Qt::AnchorPoint point);
-    inline int getValue(Qt::AnchorPoint point);
 };
 
 class AnchorsBasePrivate;
@@ -197,6 +196,8 @@ public slots:
     bool setVerticalCenter(const AnchorInfo *verticalCenter);
     bool setFill(QWidget *fill);
     bool setCenterIn(QWidget *centerIn);
+    bool setFill(AnchorsBase *fill);
+    bool setCenterIn(AnchorsBase *centerIn);
     void setMargins(int margins);
     void setTopMargin(int topMargin);
     void setBottomMargin(int bottomMargin);
@@ -222,12 +223,8 @@ public slots:
     void moveCenter(const QPoint &arg);
 
 private slots:
-    void updateTop();
-    void updateBottom();
-    void updateLeft();
-    void updateRight();
-    void updateHorizontalCenter();
-    void updateVerticalCenter();
+    void updateVertical();
+    void updateHorizontal();
     void updateFill();
     void updateCenterIn();
 

@@ -16,9 +16,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    anchors.cpp
+    anchors.cpp \
+    dragwidget.cpp
 
 HEADERS  += mainwindow.h \
-    anchors.h
+    anchors.h \
+    dragwidget.h
 
 FORMS    += mainwindow.ui

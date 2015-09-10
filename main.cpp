@@ -2,28 +2,45 @@
 #include <QApplication>
 #include <QDebug>
 #include "anchors.h"
+#include "dragwidget.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    Anchors<MainWindow> *w = new Anchors<MainWindow>;
-    (*w)->resize(300, 300);
-    (*w)->show();
 
-    Anchors<QWidget> ww = new QWidget(w->widget());
+    Anchors<MainWindow> w = new MainWindow;
+    w->resize(500, 500);
+
+    Anchors<DragWidget> ww = new DragWidget(w);
     ww->setAutoFillBackground(true);
     ww->resize(100, 100);
-    ww->setStyleSheet("QWidget{background-color:red;}");
+    ww->setStyleSheet("QWidget{background-color:green;}");
     ww->show();
 
-    ww.setHorizontalCenter(w->horizontalCenter());
-    ww.setHorizontalCenterOffset(10);
+    Anchors<DragWidget> widget = new DragWidget(w);
+    widget->setStyleSheet("QWidget{background-color:red;}");
+    widget->resize(100, 100);
+
+    //ww.setBottom(w.bottom());
+   // ww.setBottomMargin(10);
+
+    //ww.setVerticalCenter(widget.bottom());
+    //ww.setTop(widget.bottom());
+    ww.setRight(widget.right());
+    //ww.setBottom(widget.bottom());
+    //ww.setTopMargin(-1);
+    //ww.setVerticalCenterOffset(10);
     ww.setMargins(10);
-    ww.setTopMargin(50);
-    ww.setFill(w->widget());
-    qDebug() << ww->geometry();
-    ww.setBottom(w->bottom());
-    qDebug() << ww.errorString();
+    ww.setTopMargin(5);
+    //ww->raise();
+    qDebug()<<ww.errorString();
+    //ww.setRightMargin(-1);
+
+    //ww.moveLeft(widget->rect().right());
+
+    //widget.setVerticalCenter(100, Qt::AnchorTop);
+
+    w->show();
 
     return a.exec();
 }
