@@ -225,7 +225,7 @@ class AnchorsBasePrivate
     {
         Q_Q(AnchorsBase);
 
-        ARect rect = getWidgetRect(info->base->target());
+        ARect rect = info->base->target()->geometry();
 
         switch (info->type) {
         case Qt::AnchorTop:
@@ -280,31 +280,34 @@ class AnchorsBasePrivate
             return getValueByInfo(info);
 
         qreal value = getValueByInfo(info->targetInfo);
+        bool isParent = info->base->target()->parentWidget() == info->targetInfo->base->target();
+        int topValue = isParent?-info->targetInfo->base->target()->geometry().top():0;
+        int leftValue = isParent?-info->targetInfo->base->target()->geometry().left():0;
 
         switch (info->type) {
         case Qt::AnchorTop:{
             int offset = topMargin == 0 ? margins : topMargin;
-            return value + offset;
+            return value + offset + topValue;
         }
         case Qt::AnchorBottom:{
             int offset = bottomMargin == 0 ? margins : bottomMargin;
-            return value - offset - 1;
+            return value - offset + topValue - 1;
         }
         case Qt::AnchorHorizontalCenter:{
             int offset = horizontalCenterOffset;
-            return value + offset;
+            return value + offset + leftValue;
         }
         case Qt::AnchorLeft:{
             int offset = leftMargin == 0 ? margins : leftMargin;
-            return value + offset;
+            return value + offset + leftValue;
         }
         case Qt::AnchorRight:{
             int offset = rightMargin == 0 ? margins : rightMargin;
-            return value - offset - 1;
+            return value - offset + leftValue - 1;
         }
         case Qt::AnchorVerticalCenter:{
             int offset = verticalCenterOffset;
-            return value + offset;
+            return value + offset + topValue;
         }
         default:
             return 0;
@@ -897,8 +900,9 @@ void AnchorsBase::setAlignWhenCentered(bool alignWhenCentered)
 #define SET_POS(fun)\
     ARect rect = target()->geometry();\
     rect.set##fun(arg, point);\
-    target()->setFixedSize(rect.size());\
-    target()->move(rect.topLeft());\
+    target()->setMinimumSize(QSize(0,0));\
+    target()->setMaximumSize(QSize(16777215, 16777215));\
+    target()->setGeometry(rect);\
 
 #define MOVE_POS(fun)\
     ARect rect = target()->geometry();\
