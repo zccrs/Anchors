@@ -59,7 +59,7 @@ void ExtendWidget::setTarget(QWidget *target)
     if (d->enabled && d->target) {
         d->target->removeEventFilter(this);
     }
-    if(d->enabled && target){
+    if (d->enabled && target) {
         target->installEventFilter(this);
     }
     d->target = target;
@@ -70,14 +70,16 @@ void ExtendWidget::setEnabled(bool enabled)
 {
     Q_D(ExtendWidget);
 
-    if (d->enabled == enabled)
+    if (d->enabled == enabled) {
         return;
+    }
 
-    if(d->target){
-        if(enabled)
+    if (d->target) {
+        if (enabled) {
             d->target->installEventFilter(this);
-        else
+        } else {
             d->target->removeEventFilter(this);
+        }
     }
 
     d->enabled = enabled;
@@ -264,8 +266,9 @@ class AnchorsBasePrivate
 
     void setValueByInfo(qreal value, const AnchorInfo *info)
     {
-        if(!info)
+        if (!info) {
             return;
+        }
 
         switch (info->type) {
         case Qt::AnchorTop:
@@ -293,36 +296,37 @@ class AnchorsBasePrivate
 
     qreal getTargetValueByInfo(const AnchorInfo *info)
     {
-        if(!info->targetInfo)
+        if (!info->targetInfo) {
             return getValueByInfo(info);
+        }
 
         qreal value = getValueByInfo(info->targetInfo);
         bool isParent = info->base->target()->parentWidget() == info->targetInfo->base->target();
-        int topValue = isParent?-info->targetInfo->base->target()->geometry().top():0;
-        int leftValue = isParent?-info->targetInfo->base->target()->geometry().left():0;
+        int topValue = isParent ? -info->targetInfo->base->target()->geometry().top() : 0;
+        int leftValue = isParent ? -info->targetInfo->base->target()->geometry().left() : 0;
 
         switch (info->type) {
-        case Qt::AnchorTop:{
+        case Qt::AnchorTop: {
             int offset = topMargin == 0 ? margins : topMargin;
             return value + offset + topValue;
         }
-        case Qt::AnchorBottom:{
+        case Qt::AnchorBottom: {
             int offset = bottomMargin == 0 ? margins : bottomMargin;
             return value - offset + topValue - 1;
         }
-        case Qt::AnchorHorizontalCenter:{
+        case Qt::AnchorHorizontalCenter: {
             int offset = horizontalCenterOffset;
             return value + offset + leftValue;
         }
-        case Qt::AnchorLeft:{
+        case Qt::AnchorLeft: {
             int offset = leftMargin == 0 ? margins : leftMargin;
             return value + offset + leftValue;
         }
-        case Qt::AnchorRight:{
+        case Qt::AnchorRight: {
             int offset = rightMargin == 0 ? margins : rightMargin;
             return value - offset + leftValue - 1;
         }
-        case Qt::AnchorVerticalCenter:{
+        case Qt::AnchorVerticalCenter: {
             int offset = verticalCenterOffset;
             return value + offset + topValue;
         }
@@ -385,8 +389,9 @@ AnchorsBase::~AnchorsBase()
     Q_D(AnchorsBase);
 
     d->removeWidgetAnchorsBase(target(), this);
-    if(d->q_func() == this)
+    if (d->q_func() == this) {
         delete d;
+    }
 }
 
 QWidget *AnchorsBase::target() const
@@ -549,12 +554,15 @@ bool AnchorsBase::isBinding(const AnchorInfo *info) const
 
 bool AnchorsBase::setAnchor(QWidget *w, const Qt::AnchorPoint &p, QWidget *target, const Qt::AnchorPoint &point)
 {
-    if(!w || !target)
+    if (!w || !target) {
         return false;
+    }
 
     AnchorsBase *base = AnchorsBasePrivate::getWidgetAnchorsBase(w);
-    if(!base)
-        AnchorsBasePrivate::setWidgetAnchorsBase(w, new AnchorsBase(w));
+    if (!base) {
+        base = new AnchorsBase(w);
+        AnchorsBasePrivate::setWidgetAnchorsBase(w, base);
+    }
 
     return base->setAnchor(p, target, point);
 }
@@ -562,8 +570,9 @@ bool AnchorsBase::setAnchor(QWidget *w, const Qt::AnchorPoint &p, QWidget *targe
 void AnchorsBase::clearAnchors(const QWidget *w)
 {
     AnchorsBase *base = AnchorsBasePrivate::getWidgetAnchorsBase(w);
-    if(base)
+    if (base) {
         base->deleteLater();
+    }
 }
 
 AnchorsBase *AnchorsBase::getAnchorBaseByWidget(const QWidget *w)
@@ -580,13 +589,16 @@ void AnchorsBase::setEnabled(bool enabled)
 
 bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt::AnchorPoint &point)
 {
-    if(!target)
+    if (!target) {
         return false;
+    }
 
     AnchorsBase *base = AnchorsBasePrivate::getWidgetAnchorsBase(target);
 
-    if(!base)
-        AnchorsBasePrivate::setWidgetAnchorsBase(target, new AnchorsBase(target));
+    if (!base) {
+        base = new AnchorsBase(target);
+        AnchorsBasePrivate::setWidgetAnchorsBase(target, base);
+    }
 
     const AnchorInfo *info = base->d_func()->getInfoByPoint(point);
 
@@ -812,7 +824,7 @@ void AnchorsBase::setMargins(int margins)
     if (margins != 0) {
         if (d->fill->target()) {
             updateFill();
-        }else{
+        } else {
             updateVertical();
             updateHorizontal();
         }
@@ -833,7 +845,7 @@ void AnchorsBase::setTopMargin(int topMargin)
 
     if (d->fill->target()) {
         updateFill();
-    }else if (isBinding(d->top)) {
+    } else if (isBinding(d->top)) {
         updateVertical();
     }
 
@@ -852,7 +864,7 @@ void AnchorsBase::setBottomMargin(int bottomMargin)
 
     if (d->fill->target()) {
         updateFill();
-    }else if (isBinding(d->bottom)) {
+    } else if (isBinding(d->bottom)) {
         updateVertical();
     }
 
@@ -871,7 +883,7 @@ void AnchorsBase::setLeftMargin(int leftMargin)
 
     if (d->fill->target()) {
         updateFill();
-    }else if (isBinding(d->left)) {
+    } else if (isBinding(d->left)) {
         updateHorizontal();
     }
 
@@ -1045,12 +1057,12 @@ void AnchorsBase::moveCenter(const QPoint &arg)
 
 void AnchorsBase::updateVertical()
 {
-    UPDATE_GEOMETRY(top,Top,verticalCenter,VerticalCenter,bottom,Bottom)
+    UPDATE_GEOMETRY(top, Top, verticalCenter, VerticalCenter, bottom, Bottom)
 }
 
 void AnchorsBase::updateHorizontal()
 {
-    UPDATE_GEOMETRY(left,Left,horizontalCenter,HorizontalCenter,right,Right)
+    UPDATE_GEOMETRY(left, Left, horizontalCenter, HorizontalCenter, right, Right)
 }
 
 void AnchorsBase::updateFill()
@@ -1091,16 +1103,17 @@ void AnchorsBase::init(QWidget *w)
 
     AnchorsBase *base = AnchorsBasePrivate::getWidgetAnchorsBase(w);
 
-    if(base){
-        if(d && d->q_func() == this)
+    if (base) {
+        if (d && d->q_func() == this) {
             delete d;
+        }
 
         d_ptr = base->d_func();
-    }else if(d && d->q_func() == this){
+    } else if (d && d->q_func() == this) {
         d->removeWidgetAnchorsBase(target(), this);
         d->setWidgetAnchorsBase(w, this);
         d->extendWidget->setTarget(w);
-    }else{
+    } else {
         base = new AnchorsBase(w, false);
         d_ptr = base->d_func();
     }
