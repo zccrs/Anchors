@@ -1,5 +1,4 @@
 #include <QDebug>
-#include <QSharedData>
 
 #include "anchors.h"
 
@@ -561,7 +560,6 @@ bool AnchorsBase::setAnchor(QWidget *w, const Qt::AnchorPoint &p, QWidget *targe
     AnchorsBase *base = AnchorsBasePrivate::getWidgetAnchorsBase(w);
     if (!base) {
         base = new AnchorsBase(w);
-        AnchorsBasePrivate::setWidgetAnchorsBase(w, base);
     }
 
     return base->setAnchor(p, target, point);
@@ -597,7 +595,6 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
 
     if (!base) {
         base = new AnchorsBase(target);
-        AnchorsBasePrivate::setWidgetAnchorsBase(target, base);
     }
 
     const AnchorInfo *info = base->d_func()->getInfoByPoint(point);
@@ -636,7 +633,7 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
             d->errorString = tr("Conflict: CenterIn or Fill is anchored.");\
             return false;\
         }\
-        if (point->base == this){\
+        if (point->base == d->q_func()){\
             d->errorCode = TargetInvalid;\
             d->errorString = tr("Cannot anchor widget to self.");\
             return false;\
@@ -689,16 +686,16 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
                 QByteArray arr = str.replace(" ", "").toLatin1();\
                 if(arr.right(1) != ")") arr += ")";\
                 if(tmp_w1)\
-                    disconnect(tmp_w1, QByteArray("2"+arr).data(), d->point->base, SLOT(slotName()));\
+                    disconnect(tmp_w1, QByteArray("2"+arr).data(), d->q_func(), SLOT(slotName()));\
                 if(arr.size() != 13 || target()->parentWidget() != point->base->target())\
-                    connect(tmp_w2, QByteArray("2"+arr).data(), d->point->base, SLOT(slotName()));\
+                    connect(tmp_w2, QByteArray("2"+arr).data(), d->q_func(), SLOT(slotName()));\
             }\
         }\
     }else{\
         foreach(QString str, signalList){\
             QByteArray arr = str.replace(" ", "").toLatin1();\
             if(arr.right(1) != ")") arr += ")";\
-            disconnect(tmp_w1, QByteArray("2"+arr).data(), d->point->base, SLOT(slotName()));\
+            disconnect(tmp_w1, QByteArray("2"+arr).data(), d->q_func(), SLOT(slotName()));\
         }\
         *d->point = point;\
         return true;\
