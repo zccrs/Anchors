@@ -122,12 +122,12 @@ public:
         moveTop(arg - height() / 2.0);
     }
 
-    inline void setTop(int arg, Qt::AnchorPoint point);
-    inline void setVerticalCenter(qreal arg, Qt::AnchorPoint point);
-    inline void setBottom(int arg, Qt::AnchorPoint point);
-    inline void setLeft(int arg, Qt::AnchorPoint point);
-    inline void setHorizontalCenter(qreal arg, Qt::AnchorPoint point);
-    inline void setRight(int arg, Qt::AnchorPoint point);
+    void setTop(int arg, Qt::AnchorPoint point);
+    void setVerticalCenter(qreal arg, Qt::AnchorPoint point);
+    void setBottom(int arg, Qt::AnchorPoint point);
+    void setLeft(int arg, Qt::AnchorPoint point);
+    void setHorizontalCenter(qreal arg, Qt::AnchorPoint point);
+    void setRight(int arg, Qt::AnchorPoint point);
 };
 
 class AnchorsBasePrivate;
