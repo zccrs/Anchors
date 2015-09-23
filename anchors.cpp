@@ -658,12 +658,12 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
     if(point){\
         if(!d->isBindable(d->point)){\
             d->errorCode = Conflict;\
-            d->errorString = tr("Conflict: CenterIn or Fill is anchored.");\
+            d->errorString = "Conflict: CenterIn or Fill is anchored.";\
             return false;\
         }\
         if (point->base == d->q_func()){\
             d->errorCode = TargetInvalid;\
-            d->errorString = tr("Cannot anchor widget to self.");\
+            d->errorString = "Cannot anchor widget to self.";\
             return false;\
         }else if(target()->parentWidget() != point->base->target()){\
             bool isBrother = false;\
@@ -675,13 +675,13 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
             }\
             if(!isBrother){\
                 d->errorCode = TargetInvalid;\
-                d->errorString = tr("Cannot anchor to an widget that isn't a parent or sibling.");\
+                d->errorString = "Cannot anchor to an widget that isn't a parent or sibling.";\
                 return false;\
             }\
         }\
         if(!d->checkInfo(d->point, point)){\
             d->errorCode = PointInvalid;\
-            d->errorString = tr("Cannot anchor a vertical/horizontal edge to a horizontal/vertical edge.");\
+            d->errorString = "Cannot anchor a vertical/horizontal edge to a horizontal/vertical edge.";\
             return false;\
         }\
         int old_pos = d->getValueByInfo(point);\
@@ -692,7 +692,7 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
             *d->point = old_info;\
             slotName();\
             d->errorCode = PointInvalid;\
-            d->errorString = tr("loop bind.");\
+            d->errorString = "loop bind.";\
             return false;\
         }else{\
             old_pos = d->getValueByInfo(d->point);\
@@ -703,7 +703,7 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
                 slotName();\
                 d->setValueByInfo(target_old_value, point);\
                 d->errorCode = PointInvalid;\
-                d->errorString = tr("loop bind.");\
+                d->errorString = "loop bind.";\
                 return false;\
             }\
             d->setValueByInfo(target_old_value, point);\
@@ -742,7 +742,7 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
     if(point){\
         if (point == target()){\
             d->errorCode = TargetInvalid;\
-            d->errorString = tr("Cannot anchor widget to self.");\
+            d->errorString = "Cannot anchor widget to self.";\
             return false;\
         }else if(target()->parentWidget() != point){\
             bool isBrother = false;\
@@ -754,7 +754,7 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
             }\
             if(!isBrother){\
                 d->errorCode = TargetInvalid;\
-                d->errorString = tr("Cannot anchor to an widget that isn't a parent or sibling.");\
+                d->errorString = "Cannot anchor to an widget that isn't a parent or sibling.";\
                 return false;\
             }\
         }\
@@ -766,7 +766,7 @@ bool AnchorsBase::setAnchor(const Qt::AnchorPoint &p, QWidget *target, const Qt:
             d->point->setTarget(old_widget);\
             update##Point();\
             d->errorCode = PointInvalid;\
-            d->errorString = tr("loop bind.");\
+            d->errorString = "loop bind.";\
             return false;\
         }\
         AnchorInfo *info = NULL;\
@@ -826,7 +826,7 @@ bool AnchorsBase::setCenterIn(QWidget *centerIn)
 
     if (centerIn && d->fill->target()) {
         d->errorCode = Conflict;
-        d->errorString = tr("Conflict: Fill is anchored.");
+        d->errorString = "Conflict: Fill is anchored.";
         return false;
     }
 
